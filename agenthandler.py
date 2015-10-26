@@ -41,7 +41,8 @@ def report(message):
     counter = int(time.time())
     # lock = threading.Lock()
     # lock.acquire()
-    message_dict = message
+    message_dict = {}
+    message_dict['payload'] = message
     message_dict['timestamp'] = str(time.time())
     message_dict['agent_id'] = sys.argv[0][7:len(sys.argv[0])-3]
     payload = {'jsonrpc':"2.0", 'id':str(time.time()), 'method':"message"}
