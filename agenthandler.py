@@ -53,6 +53,7 @@ def report(message):
         if DEBUG:
             print(payload)
         ws.send(json.dumps(payload))
+        ws.close()
     except:
         if DEBUG:
             print('Could not send agent_report')
