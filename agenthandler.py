@@ -40,7 +40,7 @@ lock = threading.Lock()
 def report(message):
     counter = int(time.time())
     # lock = threading.Lock()
-    # lock.acquire()
+    lock.acquire()
     message_dict = {}
     message_dict['payload'] = message
     message_dict['timestamp'] = str(time.time())
@@ -57,7 +57,7 @@ def report(message):
     except:
         if DEBUG:
             print('Could not send agent_report')
-    # lock.release()
+    lock.release()
 
 def terminate_agent(agent_id):
     lock.acquire()
