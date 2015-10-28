@@ -49,11 +49,11 @@ def report(message):
     payload['params'] = {'service_name':target_service,
                             'timeout':(int(time.time())+60), 'parameters':message_dict}
     try:
-        ws = websocket.create_connection(host)
+        ws1 = websocket.create_connection(host)
         if DEBUG:
             print(payload)
-        ws.send(json.dumps(payload))
-        ws.close()
+        ws1.send(json.dumps(payload))
+        # ws.close()
     except:
         if DEBUG:
             print('Could not send agent_report')
