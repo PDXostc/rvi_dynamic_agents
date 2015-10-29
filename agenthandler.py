@@ -73,8 +73,11 @@ def terminate_agent(agent_id):
             break
         else:
             pass
-    tempdeletepath = os.path.join(save_path, launch_command.split()[1])
-
+    try:
+        tempdeletepath = os.path.join(save_path, launch_command.split()[1])
+    except:
+        if DEBUG:
+            print("Could not get tempdeletepath")
     try:
         running_agents[agent_id].terminate()
         if DEBUG:
