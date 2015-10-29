@@ -33,8 +33,13 @@ def on_message(ws, message):
             params = message_dict['params']['parameters']
             agent_id = params['agent_id']
             timestamp = params['timestamp']
-            for key in params['payload']:
-                rconn.hincrby(('agent:'+agent_id), key , str(params['payload'][key]))
+            try:
+                for key in params['payload']:
+                    rconn.hincrby(('agent:'+agent_id), key , str(params['payload'][key]))
+                    rconn.sadd('agent', agent_id)
+            except:
+                if DEBUG:
+                    print('Not count type agent redis is not happy :<')
 
 
             if agent_id not in open_files:
