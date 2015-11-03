@@ -23,8 +23,8 @@
 	#### Optional Redis Server and Flask Counter Demo Setup ####
 	  1. Install flask and redis
 	  2. Make sure redis server is setup
-	  3. Change flasktest/hello.py to make sure your redis client will work if not using default setup
-	  4. python flasktest/hello.py
+	  3. Change flaskserver/demoagentsite.py to make sure your redis client will work if not using default setup
+	  4. python flaskserver/demoagentsite.py
 	  5. Access and see reported agent counts at localhost:5000
 	4. python3 agentserver/agentserver.py
 
