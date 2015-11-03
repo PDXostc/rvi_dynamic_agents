@@ -9,6 +9,7 @@ import websocket
 import sys
 import os
 import base64
+import agenthandler_config as settings
 
 try:
     import thread
@@ -16,7 +17,7 @@ except ImportError:  #TODO use Threading instead of _thread in python3
     import _thread as thread
 
 #DEBUG MESSAGING PRINTOUTS
-DEBUG = True
+DEBUG = settings.DEBUG_TOGGLE
 
 #Agent Handler Globals
 #agent_pool = Agents that are currently registered and that we are keeping track of
@@ -27,14 +28,14 @@ expire_monitors = {}
 agent_map = []
 agent_pool = []
 expire_monitor_threads = {}
+counter = 0
 
 #RVI Params
-service_name_1 = "dynamicagents/agent"
-service_name_2 = "dynamicagents/terminate_agent"
+service_name_1 = settings.NEW_AGENT_SERVICE
+service_name_2 = settings.TERMINATE_AGENT_SERVICE
 
-host="ws://localhost:8808"
-counter = 0
-target_service = "jlr.com/backend/dynamicagents/agent_report"
+host=settings.RVI_WS_HOST
+target_service = settings.RVI_AGENT_REPORT_SERVICE
 
 lock = threading.Lock()
 def report(message):
@@ -64,7 +65,7 @@ def terminate_agent(agent_id):
     launch_command = None
     expiration_date = None
     pwd = os.getcwd()
-    save_path = pwd + '/agents/'
+    save_path = pwd + settings.AGENT_SAVE_DIRECTORY
 
     for agent in agent_pool:
         if agent['agent_name'] == agent_id:
@@ -165,7 +166,7 @@ def agent_expiration_monitor(agent_id):
                     print('Restarting: ' + agent_id)
 
                 split_launch_command = launch_command.split()
-                split_launch_command[1] = "agents/"+split_launch_command[1]
+                split_launch_command[1] = settings.AGENT_SAVE_DIRECTORY[1:]+split_launch_command[1]
 
                 running_agents[agent_id] = subprocess.Popen(split_launch_command)
                 time.sleep(1)
@@ -259,7 +260,7 @@ def on_message(ws, message):
 ########################################Check for the correct parameters######################################
     if message_dict['method'] == 'message' and message_dict['params']['service_name'][1:] == service_name_1:
         pwd = os.getcwd()
-        save_path = pwd + '/agents/'
+        save_path = pwd + settings.AGENT_SAVE_DIRECTORY
         try:
             params = message_dict['params']['parameters']
             if DEBUG:
@@ -403,7 +404,7 @@ if __name__ == "__main__":
     while True:
 
         if len(sys.argv) < 2:
-            host = "ws://localhost:8808"
+            host = settings.RVI_WS_HOST
         else:
             host = sys.argv[1]
 
