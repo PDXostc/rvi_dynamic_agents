@@ -13,8 +13,10 @@ import agenthandler_config as settings
 
 try:
     import thread
-except ImportError:  #TODO use Threading instead of _thread in python3
+#TODO use Threading instead of _thread in python3
+except ImportError:
     import _thread as thread
+
 
 #DEBUG MESSAGING PRINTOUTS
 DEBUG = settings.DEBUG_TOGGLE
@@ -23,31 +25,39 @@ DEBUG = settings.DEBUG_TOGGLE
 #agent_pool = Agents that are currently registered and that we are keeping track of
 #agent_map = map of our agent_pool that will be stored in a memory to keep running even if case of power cycles
 #running_agents = dictionary of running processes which can be terminated if needed
+#expire_monitor_threads = threads that are started to watch for an agent expiration
+
 running_agents = {}
 expire_monitors = {}
 agent_map = []
 agent_pool = []
 expire_monitor_threads = {}
-counter = 0
 
 #RVI Params
-service_name_1 = settings.NEW_AGENT_SERVICE
-service_name_2 = settings.TERMINATE_AGENT_SERVICE
+#The services that we must register in order for the agenthandler to receive an agent+run and a service to terminate
+#The agent_report_service is the agent_report service which agents can invoke to send data to
+services_to_register = []
+services_to_register.append(settings.NEW_AGENT_SERVICE)
+services_to_register.append(settings.TERMINATE_AGENT_SERVICE)
 
+agent_report_service = settings.RVI_AGENT_REPORT_SERVICE
+
+#Get the RVI websocket server location to connect to
 host=settings.RVI_WS_HOST
-target_service = settings.RVI_AGENT_REPORT_SERVICE
 
+#Global lock variable for threads to grab when they are performing an action which should not be interrupted
 lock = threading.Lock()
+
+#The message should be a pythonic dictionary containing key value pairs of whatever you wish to send
 def report(message):
-    counter = int(time.time())
-    # lock = threading.Lock()
+
     lock.acquire()
     message_dict = {}
     message_dict['payload'] = message
     message_dict['timestamp'] = str(time.time())
     message_dict['agent_id'] = sys.argv[0][7:len(sys.argv[0])-3]
     payload = {'jsonrpc':"2.0", 'id':str(time.time()), 'method':"message"}
-    payload['params'] = {'service_name':target_service,
+    payload['params'] = {'service_name':agent_report_service,
                             'timeout':(int(time.time())+60), 'parameters':message_dict}
     try:
         ws1 = websocket.create_connection(host)
@@ -60,6 +70,7 @@ def report(message):
             print('Could not send agent_report')
     lock.release()
 
+#terminate_agent accepts an agent_id which is a string which represents the agent_name in the global agent_pool
 def terminate_agent(agent_id):
     lock.acquire()
     launch_command = None
@@ -67,6 +78,7 @@ def terminate_agent(agent_id):
     pwd = os.getcwd()
     save_path = pwd + settings.AGENT_SAVE_DIRECTORY
 
+    #Grab the agent's corresponding launch_command and expiration_date
     for agent in agent_pool:
         if agent['agent_name'] == agent_id:
             launch_command = agent['launch']
@@ -74,11 +86,14 @@ def terminate_agent(agent_id):
             break
         else:
             pass
+    #load the path the agent's code exists on
     try:
         tempdeletepath = os.path.join(save_path, launch_command.split()[1])
     except:
         if DEBUG:
             print("Could not get tempdeletepath")
+
+    #Terminate the subprocess that contains the running agent
     try:
         running_agents[agent_id].terminate()
         if DEBUG:
@@ -90,6 +105,7 @@ def terminate_agent(agent_id):
         if DEBUG:
             print('No running agent with id:' + agent_id)
 
+    #remove the agent from the agent_pool and update the hard_coded file
     try:
         agent_pool.remove({'agent_name':agent_id, 'launch':launch_command, 'expires':expiration_date})
     except:
@@ -108,6 +124,8 @@ def terminate_agent(agent_id):
         for agent in agent_pool:
             agent_ids.append(agent['launch'].split()[1])
 
+    #Double check that process is actually killed if subprocess.terminate() did not kill it
+    #Will kill any python things that the agent spawned
     to_terminate = [agent_id]
     agent_pids = psutil.pids()
     for pid in agent_pids:
@@ -122,6 +140,7 @@ def terminate_agent(agent_id):
         except:
             continue            
 
+    #Remove the agent's code on our local filesystem 
     try:
     	os.remove(tempdeletepath)
     except:
@@ -130,7 +149,9 @@ def terminate_agent(agent_id):
 
     lock.release()
 
-
+#agent_expiration_monitor will take in an agent_id much like the terminate agent function and will create a thread
+#that is tracked in expire_mointor_threads dict that will monitor the agent so that if it dies prematurely will try
+#to restart that agent or if it expires based on the unix epoch time will call the terminate function.
 def agent_expiration_monitor(agent_id):
     expiration_date = None
     count = 0
@@ -184,9 +205,11 @@ def agent_expiration_monitor(agent_id):
     else:
         if DEBUG:
             print('Agent:'+agent_id+' does not exist')
-
+#Registering an agent requires 3 parameters
+#agent_id = string unique name of the id to create and save into the global agent_pool
+#launch_command = string of how to launch the agent (e.g. python3 myscript.py <variables>)
+#expiration_date = time in unix epoch format for when we should terminate the agent.
 def register_agent(agent_id, launch_command, expiration_date):
-#    lock = threading.Lock()
     lock.acquire()
     if time.time() < expiration_date:
         agent_pool.append({'agent_name':agent_id, 'launch':launch_command, 'expires':expiration_date})
@@ -200,6 +223,7 @@ def register_agent(agent_id, launch_command, expiration_date):
             print('Cannot register and run agent since it is already expired')
     lock.release()
 
+#Start up the agent and make it known in our running agent_pool global. Takes in the agent_id string
 def run_agent(agent_id):
 
     expiration_date = None
@@ -240,7 +264,7 @@ def run_agent(agent_id):
 
 
 
-
+#/*TODO*/# Turn this into a python package which we can just instantiate an instance and register and receive messages
 ####################################################################################################################
 #######################################WEBSOCKET SERVER PRELIM TESTING##############################################
 ####################################################################################################################
@@ -258,7 +282,10 @@ def on_message(ws, message):
 ##############################################################################################################
 ##############################################################################################################
 ########################################Check for the correct parameters######################################
-    if message_dict['method'] == 'message' and message_dict['params']['service_name'][1:] == service_name_1:
+##############################################################################################################
+    if message_dict['method'] == 'message' and (message_dict['params']['service_name'][1:] == 
+        settings.NEW_AGENT_SERVICE):
+
         pwd = os.getcwd()
         save_path = pwd + settings.AGENT_SAVE_DIRECTORY
         try:
@@ -292,7 +319,9 @@ def on_message(ws, message):
             if DEBUG:
                 print('Incorrect Parameters will not forward to agent_register')
 
-    elif message_dict['method'] == 'message' and message_dict['params']['service_name'][1:] == service_name_2:
+    elif message_dict['method'] == 'message' and (message_dict['params']['service_name'][1:] == 
+        settings.TERMINATE_AGENT_SERVICE):
+
         try:
             params = message_dict['params']['parameters']
             terminate_target = params['agent']
@@ -329,15 +358,12 @@ def on_open(ws):
     def run(*args):
         payload = {}
         payload['json-rpc'] = "2.0"
-        payload['id'] = counter
+        payload['id'] = "0"
         payload['method'] = "register_service"
-        payload['params'] = {"service_name":service_name_1}
-        
-        ws.send(json.dumps(payload))
 
-        payload['id'] = counter + 1
-        payload['params'] = {"service_name":service_name_2}
-        ws.send(json.dumps(payload))
+        for service_name in services_to_register:
+            payload['params'] = {"service_name":service_name}        
+            ws.send(json.dumps(payload))
 
     opening = threading.Thread(target=run)
     opening.start()
@@ -346,7 +372,7 @@ def on_open(ws):
 ####################################################################################################################
 
 
-
+#If agenthandler is called to run as the main agenthandler task and not just importing the RVI report messages
 if __name__ == "__main__":
     #Attempt to load in our previous agent mapping if not create the agent map file which will store our mapping
     try:
@@ -398,8 +424,10 @@ if __name__ == "__main__":
 ####################################################################################################################
 #######################################WEBSOCKET SERVER PRELIM TESTING##############################################
 ####################################################################################################################
-
-    websocket.enableTrace(True)
+    if DEBUG:
+        websocket.enableTrace(True)
+    else:
+        websocket.enableTrace(False)
 
     while True:
 
