@@ -46,7 +46,6 @@ host=settings.RVI_WS_HOST
 #Global lock variable for threads to grab when they are performing an action which should not be interrupted
 lock = threading.Lock()
 
-
 def print_debug(message):
     if DEBUG:
         print(message)
@@ -73,6 +72,7 @@ def lookup_id(agent_id):
         if agent['agent_name'] == agent_id:
             launch_command = agent['launch']
             expiration_date = agent['expires']
+            print_debug("Lookup_id has found "+agent_id)
             return launch_command, expiration_date
         else:
             return None, None
@@ -104,7 +104,7 @@ def report(message):
 def terminate_agent(agent_id):
 
     lock.acquire()
-
+    
     pwd = os.getcwd()
     save_path = pwd + settings.AGENT_SAVE_DIRECTORY
 
@@ -278,11 +278,12 @@ def new_agent(parameters):
     except:
         print_debug('Incorrect Parameters new_agent failed')
 
-def terminate_agent(parameters):
+def kill_agent(parameters):
     print_debug("Terminate agent called")
     try:
         params = parameters
         terminate_target = params['agent']
+        print_debug("Terminating signal got for "+terminate_target)
         try:
             terminate_agent(agent_id=terminate_target)
         except:
@@ -437,7 +438,7 @@ if __name__ == "__main__":
     rvi_client = rvi_ws.rvi_ws_client()
 
     services_to_register[settings.NEW_AGENT_SERVICE] = new_agent
-    services_to_register[settings.TERMINATE_AGENT_SERVICE] = terminate_agent
+    services_to_register[settings.TERMINATE_AGENT_SERVICE] = kill_agent
 
     print_debug(services_to_register)
     rvi_client.register_services(services_to_register)
