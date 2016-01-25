@@ -104,55 +104,58 @@ def report(message):
 def terminate_agent(agent_id):
 
     lock.acquire()
-    
-    pwd = os.getcwd()
-    save_path = pwd + settings.AGENT_SAVE_DIRECTORY
-
-    #Grab the agent's corresponding launch_command and expiration_date
-    launch_command, expiration_date = lookup_id(agent_id)
-
-    #load the path the agent's code exists on
     try:
-        tempdeletepath = os.path.join(save_path, launch_command.split()[1])
-    except:
-        print_debug("Could not get tempdeletepath")
+        pwd = os.getcwd()
+        save_path = pwd + settings.AGENT_SAVE_DIRECTORY
 
-    #Terminate the subprocess that contains the running agent
-    try:
-        running_agents[agent_id].terminate()
-        print_debug('---------------Terminating----------------')
-        print_debug(agent_id + launch_command + str(expiration_date))
-        print_debug('---------------Terminating----------------')
-    except:
-        print_debug('No running agent with id:' + agent_id)
+        #Grab the agent's corresponding launch_command and expiration_date
+        launch_command, expiration_date = lookup_id(agent_id)
 
-    #remove the agent from the agent_pool and update the hard_coded file
-    try:
-        agent_pool.remove({'agent_name':agent_id, 'launch':launch_command, 'expires':expiration_date})
-    except:
-        print_debug('Agent does not exist in agent_pool')
-        print_debug(agent_pool)
-    try:
-        agent_map = open('agent_map.txt', 'w+')
-        json.dump(agent_pool, agent_map)
-        agent_map.close()
-    except:
-        print_debug('Could not write current agent pool to memory')
+        #load the path the agent's code exists on
+        try:
+            tempdeletepath = os.path.join(save_path, launch_command.split()[1])
+        except:
+            print_debug("Could not get tempdeletepath")
 
-        agent_ids = []
-        for agent in agent_pool:
-            agent_ids.append(agent['launch'].split()[1])
+        #Terminate the subprocess that contains the running agent
+        try:
+            running_agents[agent_id].terminate()
+            print_debug('---------------Terminating----------------')
+            print_debug(agent_id + launch_command + str(expiration_date))
+            print_debug('---------------Terminating----------------')
+        except:
+            print_debug('No running agent with id:' + agent_id)
 
-    #Double check that process is actually killed if subprocess.terminate() did not kill it
-    #Will kill any python things that the agent spawned
-    to_terminate = [agent_id]
-    force_terminate(to_terminate)            
+        #remove the agent from the agent_pool and update the hard_coded file
+        try:
+            agent_pool.remove({'agent_name':agent_id, 'launch':launch_command, 'expires':expiration_date})
+        except:
+            print_debug('Agent does not exist in agent_pool')
+            print_debug(agent_pool)
+        try:
+            agent_map = open('agent_map.txt', 'w+')
+            json.dump(agent_pool, agent_map)
+            agent_map.close()
+        except:
+            print_debug('Could not write current agent pool to memory')
 
-    #Remove the agent's code on our local filesystem 
-    try:
-        os.remove(tempdeletepath)
+            agent_ids = []
+            for agent in agent_pool:
+                agent_ids.append(agent['launch'].split()[1])
+
+        #Double check that process is actually killed if subprocess.terminate() did not kill it
+        #Will kill any python things that the agent spawned
+        to_terminate = [agent_id]
+        force_terminate(to_terminate)            
+
+        #Remove the agent's code on our local filesystem 
+        try:
+            os.remove(tempdeletepath)
+        except:
+            print_debug('Could not delete file')
+
     except:
-        print_debug('Could not delete file')
+        print_debug("terminate_agent failed, continuing execution")
 
     lock.release()
 
@@ -210,15 +213,19 @@ def register_agent(agent_id, launch_command, expiration_date):
 
     lock.acquire()
 
-    if time.time() < expiration_date:
-        agent_pool.append({'agent_name':agent_id, 'launch':launch_command, 'expires':expiration_date})
-        agent_map = open('agent_map.txt', 'w+')
-        json.dump(agent_pool, agent_map)
-        agent_map.close()
+    try:
+        if time.time() < expiration_date:
+            agent_pool.append({'agent_name':agent_id, 'launch':launch_command, 'expires':expiration_date})
+            agent_map = open('agent_map.txt', 'w+')
+            json.dump(agent_pool, agent_map)
+            agent_map.close()
 
-        run_agent(agent_id = agent_id)
-    else:
-        print_debug('Cannot register and run agent since it is already expired')
+            run_agent(agent_id = agent_id)
+        else:
+            print_debug('Cannot register and run agent since it is already expired')
+
+    except:
+        print_debug("register_agent failed, continuing execution")
     lock.release()
 
 #Start up the agent and make it known in our running agent_pool global. Takes in the agent_id string
@@ -262,9 +269,12 @@ def new_agent(agent, launch, expires, agent_code):
         print_debug("got all correct params")
         #############Save The Agent##############
         lock.acquire()
-        savefile = open(tempsavepath, "w+")
-        savefile.write(base64.b64decode(agent_code.encode('UTF-8')).decode('UTF-8'))
-        savefile.close()
+        try:
+            savefile = open(tempsavepath, "w+")
+            savefile.write(base64.b64decode(agent_code.encode('UTF-8')).decode('UTF-8'))
+            savefile.close()
+        except:
+            print_debug("Saving to file failed, continuing execution")
         lock.release()
 
         print_debug('forwarding message payload to agent_register')
