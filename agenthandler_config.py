@@ -1,9 +1,12 @@
 #Do we wish to see debug messages on our agenthandler
 DEBUG_TOGGLE = True
 
+#What our service bundle will be called
+SERVICE_BUNDLE = "dynamicagents"
+
 #Services that we wish to register locally
-NEW_AGENT_SERVICE = "dynamicagents/agent"
-TERMINATE_AGENT_SERVICE = "dynamicagents/terminate_agent"
+NEW_AGENT_SERVICE = "agent"
+TERMINATE_AGENT_SERVICE = "terminate_agent"
 
 #The websocket host that our RVI websocket server is listening on
 RVI_WS_HOST = "ws://localhost:8808"
