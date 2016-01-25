@@ -247,42 +247,41 @@ def run_agent(agent_id):
         print_debug('Agent does not exist')
         return
 
-def new_agent(parameters):
-    print_debug("new_agent agent called")
+def new_agent(agent, launch, expires, agent_code):
+
     pwd = os.getcwd()
     save_path = pwd + settings.AGENT_SAVE_DIRECTORY
     try:
-        params = parameters
-        print_debug(params)
-        agent_name = params['agent']
-        launch_cmd = params['launch'] #for now launch_cmd will be "<python/python3/whatever> <AAAA.py>"
-        expires = float(params['expires'])
+        print_debug("In try handler")
+        agent_name = agent
+        launch_cmd = launch  #for now launch_cmd will be "<python/python3/whatever> <AAAA.py>"
+        expiration = float(expires)
 
         tempsavepath = os.path.join(save_path, launch_cmd.split()[1])
 
+        print_debug("got all correct params")
         #############Save The Agent##############
         lock.acquire()
         savefile = open(tempsavepath, "w+")
-        savefile.write(base64.b64decode(params['agent_code'].encode('UTF-8')).decode('UTF-8'))
+        savefile.write(base64.b64decode(agent_code.encode('UTF-8')).decode('UTF-8'))
         savefile.close()
         lock.release()
 
         print_debug('forwarding message payload to agent_register')
         print_debug('agent_name: ' + agent_name)
         print_debug('launch_cmd: ' + launch_cmd)
-        print_debug('expires: ' + str(expires))
+        print_debug('expires: ' + str(expiration))
         try:
-            register_agent(agent_id=agent_name, launch_command=launch_cmd, expiration_date=expires)
+            register_agent(agent_id=agent_name, launch_command=launch_cmd, expiration_date=expiration)
         except:
             print_debug('agent_register forwarding failed')
     except:
         print_debug('Incorrect Parameters new_agent failed')
 
-def kill_agent(parameters):
-    print_debug("Terminate agent called")
+def kill_agent(agent):
+
     try:
-        params = parameters
-        terminate_target = params['agent']
+        terminate_target = agent
         print_debug("Terminating signal got for "+terminate_target)
         try:
             terminate_agent(agent_id=terminate_target)
@@ -291,107 +290,6 @@ def kill_agent(parameters):
             pass
     except:
         print_debug('Incorrect Parameters | No Agent to terminate')
-
-
-
-#/*TODO*/# Turn this into a python package which we can just instantiate an instance and register and receive messages
-####################################################################################################################
-#######################################WEBSOCKET SERVER PRELIM TESTING##############################################
-####################################################################################################################
-# def on_message(ws, message):
-
-#     message_dict = json.loads(message)
-
-#     if DEBUG:
-#         print(message)
-#         if message_dict['method'] == 'message':
-#             print("###########THIS IS A MESSAGE#############")
-#             for key, value in message_dict.items():
-#                 print(key, value)
-#             print("############END OF MESSAGE###############")
-# ##############################################################################################################
-# ##############################################################################################################
-# ########################################Check for the correct parameters######################################
-# ##############################################################################################################
-#     if message_dict['method'] == 'message' and (message_dict['params']['service_name'][1:] == 
-#         settings.NEW_AGENT_SERVICE):
-
-#         pwd = os.getcwd()
-#         save_path = pwd + settings.AGENT_SAVE_DIRECTORY
-#         try:
-#             params = message_dict['params']['parameters']
-#             print_debug(params)
-#             agent_name = params['agent']
-#             launch_cmd = params['launch'] #for now launch_cmd will be "<python/python3/whatever> <AAAA.py>"
-#             expires = float(params['expires'])
-
-#             tempsavepath = os.path.join(save_path, launch_cmd.split()[1])
-
-#             #############Save The Agent##############
-#             lock.acquire()
-#             savefile = open(tempsavepath, "w+")
-#             savefile.write(base64.b64decode(params['agent_code'].encode('UTF-8')).decode('UTF-8'))
-#             savefile.close()
-#             lock.release()
-
-#             print_debug('forwarding message payload to agent_register')
-#             print_debug('agent_name: ' + agent_name)
-#             print_debug('launch_cmd: ' + launch_cmd)
-#             print_debug('expires: ' + str(expires))
-#             try:
-#                 register_agent(agent_id=agent_name, launch_command=launch_cmd, expiration_date=expires)
-#             except:
-#                 print_debug('agent_register forwarding failed')
-#         except:
-#             print_debug('Incorrect Parameters will not forward to agent_register')
-
-#     elif message_dict['method'] == 'message' and (message_dict['params']['service_name'][1:] == 
-#         settings.TERMINATE_AGENT_SERVICE):
-
-#         try:
-#             params = message_dict['params']['parameters']
-#             terminate_target = params['agent']
-#             try:
-#                 terminate_agent(agent_id=terminate_target)
-#             except:
-#                 print_debug('Could not terminate/find corresponding agent_id')
-#                 pass
-#         except:
-#             print_debug('Incorrect Parameters | No Agent to terminate')
-
-#     else:
-#         print_debug('Not a message/ Not a matching service')
-#         pass
-
-
-# ##############################################################################################################
-# ##############################################################################################################
-
-# def on_error(ws, error):
-#     print_debug(error)
-
-
-# def on_close(ws):
-#     print_debug("### closed ###")
-
-
-# def on_open(ws):
-#     def run(*args):
-#         payload = {}
-#         payload['json-rpc'] = "2.0"
-#         payload['id'] = "0"
-#         payload['method'] = "register_service"
-
-#         for service_name in services_to_register:
-#             payload['params'] = {"service_name":service_name}        
-#             ws.send(json.dumps(payload))
-
-#     opening = threading.Thread(target=run)
-#     opening.start()
-####################################################################################################################
-####################################################################################################################
-####################################################################################################################
-
 
 #If agenthandler is called to run as the main agenthandler task and not just importing the RVI report messages
 if __name__ == "__main__":
@@ -428,13 +326,6 @@ if __name__ == "__main__":
             except:
                 print_debug('Nothing in temp agent pool')
 
-####################################################################################################################
-#######################################WEBSOCKET SERVER PRELIM TESTING##############################################
-####################################################################################################################
-    # if DEBUG:
-    #     websocket.enableTrace(True)
-    # else:
-    #     websocket.enableTrace(False)
     rvi_client = rvi_ws.rvi_ws_client()
 
     services_to_register[settings.NEW_AGENT_SERVICE] = new_agent
@@ -452,11 +343,7 @@ if __name__ == "__main__":
             host = sys.argv[1]
 
         rvi_client.set_host(host)
-        # ws = websocket.WebSocketApp(host,
-        #                             on_message = on_message,
-        #                             on_error = on_error,
-        #                             on_close = on_close)
-        # ws.on_open = on_open
+
         if rvi_client.services_run() is None:
             print_debug('No RVI. Wait and retry.')
             time.sleep(2)
@@ -468,8 +355,3 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         print('^C received, shutting down server')
-
-####################################################################################################################
-####################################################################################################################
-####################################################################################################################
-

@@ -64,9 +64,11 @@ class rvi_ws_client:
                     print(key, value)
                 print("############END OF MESSAGE###############")
 
-        if (message_dict['method'] == 'message') and (message_dict['params']['service_name'][1:] in self.callback_funcs):
-            self.callback_funcs[message_dict['params']['service_name'][1:]](message_dict['params']['parameters'])
-
+        try:
+            if (message_dict['method'] == 'message') and (message_dict['params']['service_name'][1:] in self.callback_funcs):
+                self.callback_funcs[message_dict['params']['service_name'][1:]](**message_dict['params']['parameters'])
+        except:
+            self.print_debug("Callback function call failed")
         else:
             self.print_debug("No service with matching callback")
 
