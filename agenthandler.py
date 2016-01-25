@@ -326,14 +326,14 @@ if __name__ == "__main__":
             except:
                 print_debug('Nothing in temp agent pool')
 
-    rvi_client = rvi_ws.rvi_ws_client(bundle_id = settings.SERVICE_BUNDLE)
+    rvi_client = rvi_ws.rvi_ws_client(bundle_id = settings.SERVICE_BUNDLE, host = host, debug = DEBUG)
 
     services_to_register[settings.NEW_AGENT_SERVICE] = new_agent
     services_to_register[settings.TERMINATE_AGENT_SERVICE] = kill_agent
 
     print_debug(services_to_register)
     rvi_client.register_services(services_to_register)
-    rvi_client.set_ws_debug(DEBUG)
+
 
     while True:
 

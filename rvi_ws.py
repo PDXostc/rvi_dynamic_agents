@@ -12,12 +12,12 @@ except ImportError:
 #we can automatically instantiate
 class rvi_ws_client:
 
-    def __init__(self, bundle_id = None):
+    def __init__(self, bundle_id = None, debug = False, host = "ws://localhost:8808"):
 
-        self.DEBUG = False
+        self.DEBUG = debug
         self.service_bundle_id = bundle_id
         self.callback_funcs = {}
-        self.host = "ws://localhost:8808"
+        self.host = host
 
     #set_ws_debug takes in parameter debug_status which is type bool. Will toggle on or off all websocket related debug messages.    
     def set_ws_debug(self, debug_status):
