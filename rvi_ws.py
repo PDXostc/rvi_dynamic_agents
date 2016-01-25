@@ -12,7 +12,7 @@ except ImportError:
 #we can automatically instantiate
 class rvi_ws_client:
 
-    def __init__(self, bundle_id):
+    def __init__(self, bundle_id = None):
 
         self.DEBUG = False
         self.service_bundle_id = bundle_id
@@ -57,7 +57,7 @@ class rvi_ws_client:
             payload['method'] = "register_service"
 
             for service_name, callback in self.callback_funcs.items():
-                payload['params'] = {"service_name":bundle_id+"/"+service_name}        
+                payload['params'] = {"service_name":self.service_bundle_id+"/"+service_name}        
                 ws.send(json.dumps(payload))
 
         opening = threading.Thread(target=run)
@@ -78,7 +78,7 @@ class rvi_ws_client:
 
         try:
             if (message_dict['method'] == 'message') and (message_dict['params']['service_name'][(2+len(self.service_bundle_id)):] in self.callback_funcs):
-                self.callback_funcs[message_dict['params']['service_name'][1:]](**message_dict['params']['parameters'])
+                self.callback_funcs[message_dict['params']['service_name'][(2+len(self.service_bundle_id)):]](**message_dict['params']['parameters'])
         except:
             self.print_debug("Callback function call failed")
         else:
@@ -98,6 +98,10 @@ class rvi_ws_client:
         self.print_debug(self.callback_funcs)
         self.print_debug("Registered services")
 
+        return True
+    
+    def set_service_bundle(self, service_bundle):
+        self.service_bundle_id = service_bundle
         return True
 
     #services_run is a callable function for after everything is set to start the websocket client.
