@@ -20,9 +20,8 @@ class rvi_ws_client:
         self.host = host
 
     #set_ws_debug takes in parameter debug_status which is type bool. Will toggle on or off all websocket related debug messages.    
-    def set_ws_debug(self, debug_status):
+    def set_ws_debug(self):
 
-        self.DEBUG = debug_status
         if self.DEBUG:
             websocket.enableTrace(True)
         else:
@@ -110,6 +109,8 @@ class rvi_ws_client:
         if self.service_bundle_id == None:
             self.print_debug("No service bundle defined yet")
             return False
+
+        self.set_ws_debug()
 
         ws = websocket.WebSocketApp(self.host,
                                     on_message = self.on_message,
