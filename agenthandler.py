@@ -77,6 +77,7 @@ def lookup_id(agent_id):
         else:
             return None, None
 
+    return None, None
 
 #The message should be a pythonic dictionary containing key value pairs of whatever you wish to send
 def report(message):
