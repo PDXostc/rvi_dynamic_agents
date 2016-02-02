@@ -45,3 +45,7 @@
 	6. Add an update choosing which agent you wish to send to which vehicle and its expiration date
 	7. Click checkbox and select start agent from dropdown list and hit go.
 	8. Agent should not be running, you are also able to remotely terminate from this page.
+
+
+lua dbus bindings for ubuntu need header and arch files
+sudo apt-get -y install dbus libdbus-1-dev libdbus-glib-1-2 libdbus-glib-1-dev

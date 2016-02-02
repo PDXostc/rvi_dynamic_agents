@@ -47,7 +47,7 @@ local function dbus_connected()
 end
 
 agent.get_event = get_event
-agent.get_signals_table = get_signals_table
+-- agent.get_signals_table = get_signals_table
 agent.dbus_connected = dbus_connected
 agent.medium_speed_can_table = get_signals_table()
 

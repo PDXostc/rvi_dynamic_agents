@@ -57,6 +57,7 @@ def sandbox_launch(launch_cmd):
     pwd = os.getcwd()
     sandbox_path = pwd + settings.LUA_SANDBOX_PATH
     sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
+    print_debug('(cd '+ sandbox_path + '; LUA_INIT=@' + sandbox_file + ' ' + launch_cmd + ')')
     return('(cd '+ sandbox_path + '; LUA_INIT=@' + sandbox_file + ' ' + launch_cmd + ')')
 
 def force_terminate(to_terminate):
@@ -191,7 +192,7 @@ def agent_expiration_monitor(agent_id):
 
                 print_debug('Restarting: ' + agent_id)
 
-                running_agents[agent_id] = subprocess.Popen(sandbox_launch(launch_command))
+                running_agents[agent_id] = subprocess.Popen(sandbox_launch(launch_command), shell=True)
                 time.sleep(1)
                 count += 1
             else:
@@ -213,6 +214,8 @@ def agent_expiration_monitor(agent_id):
 #expiration_date = time in unix epoch format for when we should terminate the agent.
 def register_agent(agent_id, launch_command, expiration_date):
 
+    print_debug('In register_agent')
+
     lock.acquire()
 
     try:
@@ -228,17 +231,21 @@ def register_agent(agent_id, launch_command, expiration_date):
 
     except:
         print_debug("register_agent failed, continuing execution")
+
     lock.release()
 
 #Start up the agent and make it known in our running agent_pool global. Takes in the agent_id string
 def run_agent(agent_id):
 
+    print_debug('In run_agent')
+    
     launch_command, expiration_date = lookup_id(agent_id)
 
     if expiration_date is not None and launch_command is not None:
         if time.time() < expiration_date:
 
-            running_agents[agent_id] = subprocess.Popen(sandbox_launch(launch_command))
+            print_debug('Launching subprocess')
+            running_agents[agent_id] = subprocess.Popen(sandbox_launch(launch_command), shell=True)
 
             print_debug('-----------------Starting-----------------')
             print_debug(agent_id + ' with command ' + launch_command)
@@ -257,9 +264,11 @@ def run_agent(agent_id):
 #launch will be a hardcoded parameter for the time being, In future iterations we will support more programming languages
 def new_agent(agent, expires, agent_code, launch=None):
 
+    print_debug('In new_agent')
+
     ret1, ret2 = lookup_id(agent)
     if ret1 == None and ret2 == None: 
-        lock.acquire()
+    
         pwd = os.getcwd()
         sandbox_path = pwd + settings.LUA_SANDBOX_PATH
         sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
@@ -268,19 +277,21 @@ def new_agent(agent, expires, agent_code, launch=None):
         try:
             print_debug("In try handler")
             agent_name = agent
-            launch_cmd = settings.LUA_PATH + file_save_path
+            launch_cmd = settings.LUA_PATH + ' ' + file_save_path
             expiration = float(expires)
 
             tempsavepath = os.path.join(save_path, (agent_name+'.lua'))
 
             print_debug("got all correct params")
             #############Save The Agent##############
+            lock.acquire()
             try:
                 savefile = open(tempsavepath, "w+")
                 savefile.write(base64.b64decode(agent_code.encode('UTF-8')).decode('UTF-8'))
                 savefile.close()
             except:
                 print_debug("Saving to file failed, continuing execution")
+            lock.release()
 
             print_debug('forwarding message payload to agent_register')
             print_debug('agent_name: ' + agent_name)
@@ -292,8 +303,6 @@ def new_agent(agent, expires, agent_code, launch=None):
                 print_debug('agent_register forwarding failed')
         except:
             print_debug('Incorrect Parameters new_agent failed')
-
-        lock.release()
 
     else:
         print_debug('Agent with same name already exists, please terminate first or rename')
