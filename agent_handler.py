@@ -8,7 +8,7 @@ import websocket
 import sys
 import os
 import base64
-import agenthandler_config as settings
+import agent_handler_config as settings
 import rvi_ws
 
 try:
@@ -38,7 +38,8 @@ expire_monitor_threads = {}
 #The agent_report_service is the agent_report service which agents can invoke to send data to
 services_to_register = {}
 
-agent_report_service = settings.RVI_AGENT_REPORT_SERVICE
+###################DEPRECATED IN VERSION 1.0| WAS ONLY FOR DEMO VERSION OF CODE#####################
+#agent_report_service = settings.RVI_AGENT_REPORT_SERVICE
 
 #Get the RVI websocket server location to connect to
 host=settings.RVI_WS_HOST
@@ -51,6 +52,12 @@ def print_debug(message):
         print(message)
     else:
         pass
+
+def sandbox_launch(launch_cmd):
+    pwd = os.getcwd()
+    sandbox_path = pwd + settings.LUA_SANDBOX_PATH
+    sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
+    return('(cd '+ sandbox_path + '; LUA_INIT=@' + sandbox_file + ' ' + launch_cmd + ')')
 
 def force_terminate(to_terminate):
 
@@ -75,31 +82,34 @@ def lookup_id(agent_id):
             print_debug("Lookup_id has found "+agent_id)
             return launch_command, expiration_date
         else:
-            return None, None
+            pass
 
     return None, None
 
+####################################################################################################
+###################DEPRECATED IN VERSION 1.0| WAS ONLY FOR DEMO VERSION OF CODE#####################
+####################################################################################################
 #The message should be a pythonic dictionary containing key value pairs of whatever you wish to send
-def report(message):
+# def report(message):
 
-    lock.acquire()
+#     lock.acquire()
 
-    message_dict = {}
-    message_dict['payload'] = message
-    message_dict['timestamp'] = str(time.time())
-    message_dict['agent_id'] = sys.argv[0][7:len(sys.argv[0])-3]
-    payload = {'jsonrpc':"2.0", 'id':str(time.time()), 'method':"message"}
-    payload['params'] = {'service_name':agent_report_service,
-                            'timeout':(int(time.time())+60), 'parameters':message_dict}
-    try:
-        ws1 = websocket.create_connection(host)
-        print_debug(payload)
-        ws1.send(json.dumps(payload))
-        # ws.close()
-    except:
-        print_debug('Could not send agent_report')
+#     message_dict = {}
+#     message_dict['payload'] = message
+#     message_dict['timestamp'] = str(time.time())
+#     message_dict['agent_id'] = sys.argv[0][7:len(sys.argv[0])-3]
+#     payload = {'jsonrpc':"2.0", 'id':str(time.time()), 'method':"message"}
+#     payload['params'] = {'service_name':agent_report_service,
+#                             'timeout':(int(time.time())+60), 'parameters':message_dict}
+#     try:
+#         ws1 = websocket.create_connection(host)
+#         print_debug(payload)
+#         ws1.send(json.dumps(payload))
+#         # ws.close()
+#     except:
+#         print_debug('Could not send agent_report')
 
-    lock.release()
+#     lock.release()
 
 #terminate_agent accepts an agent_id which is a string which represents the agent_name in the global agent_pool
 def terminate_agent(agent_id):
@@ -114,7 +124,7 @@ def terminate_agent(agent_id):
 
         #load the path the agent's code exists on
         try:
-            tempdeletepath = os.path.join(save_path, launch_command.split()[1])
+            tempdeletepath = os.path.join(save_path, (agent_id+'.lua'))
         except:
             print_debug("Could not get tempdeletepath")
 
@@ -175,37 +185,28 @@ def agent_expiration_monitor(agent_id):
             if running_agents[agent_id].poll() is None:
                 pass
             elif count <= 5:
-                launch_command = None
-                for agent in agent_pool:
-                    if agent['agent_name'] == agent_id:
-                        launch_command = agent['launch']
-                        expiration_date = agent['expires']
-                        break
-                    else:
-                        pass
+                launch_command, expiration_date = lookup_id(agent_id)
                 if launch_command == None:
                     break
 
                 print_debug('Restarting: ' + agent_id)
 
-                split_launch_command = launch_command.split()
-                split_launch_command[1] = settings.AGENT_SAVE_DIRECTORY[1:]+split_launch_command[1]
-
-                running_agents[agent_id] = subprocess.Popen(split_launch_command)
+                running_agents[agent_id] = subprocess.Popen(sandbox_launch(launch_command))
                 time.sleep(1)
                 count += 1
             else:
                 break
 
-            print_debug(agent_id +' expiration_date is set at: ' + str(expiration_date))
-            print_debug(agent_id +' system time is set at: ' + str(time.time()))
+            print_debug(agent_id + ' expiration_date is set at: ' + str(expiration_date))
+            print_debug(agent_id + ' system time is set at: ' + str(time.time()))
             print_debug(expiration_date - time.time())
             time.sleep(1)
 
         terminate_agent(agent_id)
         
     else:
-        print_debug('Agent:'+agent_id+' does not exist')
+        print_debug('Agent:' + agent_id + ' does not exist')
+
 #Registering an agent requires 3 parameters
 #agent_id = string unique name of the id to create and save into the global agent_pool
 #launch_command = string of how to launch the agent (e.g. python3 myscript.py <variables>)
@@ -236,10 +237,8 @@ def run_agent(agent_id):
 
     if expiration_date is not None and launch_command is not None:
         if time.time() < expiration_date:
-            split_launch_command = launch_command.split()
-            split_launch_command[1] = "agents/"+split_launch_command[1]
 
-            running_agents[agent_id] = subprocess.Popen(split_launch_command)
+            running_agents[agent_id] = subprocess.Popen(sandbox_launch(launch_command))
 
             print_debug('-----------------Starting-----------------')
             print_debug(agent_id + ' with command ' + launch_command)
@@ -255,45 +254,54 @@ def run_agent(agent_id):
         print_debug('Agent does not exist')
         return
 
-def new_agent(agent, launch, expires, agent_code):
+#launch will be a hardcoded parameter for the time being, In future iterations we will support more programming languages
+def new_agent(agent, expires, agent_code, launch=None):
 
-    pwd = os.getcwd()
-    save_path = pwd + settings.AGENT_SAVE_DIRECTORY
-    try:
-        print_debug("In try handler")
-        agent_name = agent
-        launch_cmd = launch  #for now launch_cmd will be "<python/python3/whatever> <AAAA.py>"
-        expiration = float(expires)
-
-        tempsavepath = os.path.join(save_path, launch_cmd.split()[1])
-
-        print_debug("got all correct params")
-        #############Save The Agent##############
+    ret1, ret2 = lookup_id(agent)
+    if ret1 == None and ret2 == None: 
         lock.acquire()
+        pwd = os.getcwd()
+        sandbox_path = pwd + settings.LUA_SANDBOX_PATH
+        sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
+        save_path = pwd + settings.AGENT_SAVE_DIRECTORY
+        file_save_path = pwd + settings.AGENT_SAVE_DIRECTORY + agent + '.lua'
         try:
-            savefile = open(tempsavepath, "w+")
-            savefile.write(base64.b64decode(agent_code.encode('UTF-8')).decode('UTF-8'))
-            savefile.close()
+            print_debug("In try handler")
+            agent_name = agent
+            launch_cmd = settings.LUA_PATH + file_save_path
+            expiration = float(expires)
+
+            tempsavepath = os.path.join(save_path, (agent_name+'.lua'))
+
+            print_debug("got all correct params")
+            #############Save The Agent##############
+            try:
+                savefile = open(tempsavepath, "w+")
+                savefile.write(base64.b64decode(agent_code.encode('UTF-8')).decode('UTF-8'))
+                savefile.close()
+            except:
+                print_debug("Saving to file failed, continuing execution")
+
+            print_debug('forwarding message payload to agent_register')
+            print_debug('agent_name: ' + agent_name)
+            print_debug('launch_cmd: ' + launch_cmd)
+            print_debug('expires: ' + str(expiration))
+            try:
+                register_agent(agent_id=agent_name, launch_command=launch_cmd, expiration_date=expiration)
+            except:
+                print_debug('agent_register forwarding failed')
         except:
-            print_debug("Saving to file failed, continuing execution")
+            print_debug('Incorrect Parameters new_agent failed')
+
         lock.release()
 
-        print_debug('forwarding message payload to agent_register')
-        print_debug('agent_name: ' + agent_name)
-        print_debug('launch_cmd: ' + launch_cmd)
-        print_debug('expires: ' + str(expiration))
-        try:
-            register_agent(agent_id=agent_name, launch_command=launch_cmd, expiration_date=expiration)
-        except:
-            print_debug('agent_register forwarding failed')
-    except:
-        print_debug('Incorrect Parameters new_agent failed')
-
+    else:
+        print_debug('Agent with same name already exists, please terminate first or rename')
 def kill_agent(agent):
 
     try:
         terminate_target = agent
-        print_debug("Terminating signal got for "+terminate_target)
+        print_debug("Terminating signal got for " + terminate_target)
         try:
             terminate_agent(agent_id=terminate_target)
         except:

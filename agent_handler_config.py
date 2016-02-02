@@ -16,3 +16,10 @@ RVI_AGENT_REPORT_SERVICE = "genivi.org/backend/dynamicagents/agent_report"
 
 #Not an absolute path, this directory will append onto the current working directory that agenthandler is executed on
 AGENT_SAVE_DIRECTORY = '/agents/'
+
+#Absolute path to your local lua interpreter
+LUA_PATH = '/usr/local/bin/lua'
+
+LUA_SANDBOX_PATH = '/lua_sandbox/'
+#
+LUA_SANDBOX_SETTINGS = 'lua_init.lua'
