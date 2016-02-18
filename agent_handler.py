@@ -87,32 +87,6 @@ def lookup_id(agent_id):
 
     return None, None
 
-####################################################################################################
-###################DEPRECATED IN VERSION 1.0| WAS ONLY FOR DEMO VERSION OF CODE#####################
-####################################################################################################
-#The message should be a pythonic dictionary containing key value pairs of whatever you wish to send
-# def report(message):
-
-#     lock.acquire()
-
-#     message_dict = {}
-#     message_dict['payload'] = message
-#     message_dict['timestamp'] = str(time.time())
-#     message_dict['agent_id'] = sys.argv[0][7:len(sys.argv[0])-3]
-#     payload = {'jsonrpc':"2.0", 'id':str(time.time()), 'method':"message"}
-#     payload['params'] = {'service_name':agent_report_service,
-#                             'timeout':(int(time.time())+60), 'parameters':message_dict}
-#     try:
-#         ws1 = websocket.create_connection(host)
-#         print_debug(payload)
-#         ws1.send(json.dumps(payload))
-#         # ws.close()
-#     except:
-#         print_debug('Could not send agent_report')
-
-#     lock.release()
-
-#terminate_agent accepts an agent_id which is a string which represents the agent_name in the global agent_pool
 def terminate_agent(agent_id):
 
     lock.acquire()
@@ -266,10 +240,11 @@ def new_agent(agent, expires, agent_code, launch=None):
 
     print_debug('In new_agent')
 
+    agent = "".join(agent.split())
     ret1, ret2 = lookup_id(agent)
     if ret1 == None and ret2 == None: 
     
-        pwd = os.getcwd()
+        pwd = os.path.realpath(__file__)
         sandbox_path = pwd + settings.LUA_SANDBOX_PATH
         sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
         save_path = pwd + settings.AGENT_SAVE_DIRECTORY
@@ -309,6 +284,7 @@ def new_agent(agent, expires, agent_code, launch=None):
 def kill_agent(agent):
 
     try:
+        agent = "".join(agent.split())
         terminate_target = agent
         print_debug("Terminating signal got for " + terminate_target)
         try:
@@ -377,9 +353,3 @@ if __name__ == "__main__":
             time.sleep(2)
             continue
 
-    try:
-        while True:
-            time.sleep(1.0)
-
-    except KeyboardInterrupt:
-        print('^C received, shutting down server')
