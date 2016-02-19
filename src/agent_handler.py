@@ -120,7 +120,7 @@ def terminate_agent(agent_id):
             print_debug('Agent does not exist in agent_pool')
             print_debug(agent_pool)
         try:
-            agent_map = open('agent_map.txt', 'w+')
+            agent_map = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'agent_map.txt'), 'w+')
             json.dump(agent_pool, agent_map)
             agent_map.close()
         except:
@@ -196,7 +196,7 @@ def register_agent(agent_id, launch_command, expiration_date):
     try:
         if time.time() < expiration_date:
             agent_pool.append({'agent_name':agent_id, 'launch':launch_command, 'expires':expiration_date})
-            agent_map = open('agent_map.txt', 'w+')
+            agent_map = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'agent_map.txt'), 'w+')
             json.dump(agent_pool, agent_map)
             agent_map.close()
 
