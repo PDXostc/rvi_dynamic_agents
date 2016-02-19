@@ -18,6 +18,39 @@ return_bad = None
 return_good = None
 timest = None
 
+print("Please make sure you have edited the send_proper.lua file with your host prefix e.x. genivi.org/vin/ubuntu/")
+
+yes_no = None
+while yes_no == None:
+    inputted = str(raw_input("Continue [Y/N]: ")).strip(' \t\n\r')
+    inputted = inputted.upper()
+    if inputted == "N":
+        sys.exit()
+    elif inputted == "Y":
+        yes_no = True
+        continue
+    else:
+        print("Not a valid command")
+
+
+ws_port = str(raw_input("Please enter RVI websocket server port(Default is 9008): ")).strip(" \t\n\r")
+print("Websocket port inputted: " + ws_port)
+lua_path = str(raw_input("Please enter in your Lua interpreter path(Default would be '/usr/local/bin/lua'): ")).strip(" \t\n\r")
+print("Given lua interpreter path: " + lua_path)
+
+no_yes = None
+print("Does the above information entered look correct?")
+while no_yes == None:
+    inputted = str(raw_input("Continue [Y/N]: ")).strip(' \t\n\r')
+    inputted = inputted.upper()
+    if inputted == "N":
+        sys.exit()
+    elif inputted == "Y":
+        no_yes = True
+        continue
+    else:
+        print("Not a valid command")
+
 def receive_reply(a, b, c, timestamp, agent_id):
     global timest
     timest = timestamp
@@ -39,48 +72,47 @@ def receive_reply(a, b, c, timestamp, agent_id):
 
 
 def run_fake_dbus():
-    fake_dbus_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/test_utilities/fake_can_dbus_object.py'))
+    fake_dbus_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), "..", "src/test_utilities/fake_can_dbus_object.py"))
     global dbus_proc
-    dbus_proc = subprocess.Popen(['/usr/bin/python', fake_dbus_file])
+    dbus_proc = subprocess.Popen(["/usr/bin/python", fake_dbus_file])
 
 def register_service():
-    rvi_client = rvi_ws.rvi_ws_client(bundle_id = "smoketest", host = "ws://localhost:8808", debug = False)
+    rvi_client = rvi_ws.rvi_ws_client(bundle_id = "smoketest", host = "ws://localhost:" + ws_port, debug = False)
     rvi_client.register_services({"reply":receive_reply})
     rvi_client.services_run()
 
 def run_agent():
-    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox'))
-    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox/lua_init.lua'))
-    command = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'send_proper.lua'))
+    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), "..", "src/lua_sandbox"))
+    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), "..", "src/lua_sandbox/lua_init.lua"))
+    command = os.path.abspath(os.path.join(os.path.dirname( __file__ ), "send_proper.lua"))
     global agent_proc
     global return_good
     try:
-        agent_proc = subprocess.check_output(('(cd '+ str(sandbox_path) + '; LUA_INIT=@' + str(sandbox_file) + ' /usr/local/bin/lua ' + command + ')'), shell=True)
+        agent_proc = subprocess.check_output(("(cd "+ str(sandbox_path) + "; LUA_INIT=@" + str(sandbox_file) + " " + lua_path + " " + command + ")"), shell=True)
         return_good = agent_proc
     except subprocess.CalledProcessError as runage:
         return_good = runage.returncode                                                                                                   
         # print "error code", runage.returncode
 
 def bad_agent():
-    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox'))
-    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox/lua_init.lua'))
-    command = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'send_bad.lua'))
+    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), "..", "src/lua_sandbox"))
+    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), "..", "src/lua_sandbox/lua_init.lua"))
+    command = os.path.abspath(os.path.join(os.path.dirname( __file__ ), "send_bad.lua"))
     global bad_proc
     global return_bad
     try:
-        bad_proc = subprocess.check_output(('(cd '+ str(sandbox_path) + '; LUA_INIT=@' + str(sandbox_file) + ' /usr/local/bin/lua ' + command + ')'), shell=True)
+        bad_proc = subprocess.check_output(("(cd "+ str(sandbox_path) + "; LUA_INIT=@" + str(sandbox_file) + " " + lua_path + " " + command + ")"), shell=True)
         return_bad = bad_proc
     except subprocess.CalledProcessError as badage: 
         return_bad = badage.returncode                                                                                                  
         # print "error code", badage.returncode
-
 
 services = threading.Thread(target=register_service)
 services.start()
 
 fakedbus = threading.Thread(target=run_fake_dbus)
 fakedbus.start()
-time.sleep(2)
+time.sleep(5)
 
 bad_agent()
 

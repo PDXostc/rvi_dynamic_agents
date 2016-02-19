@@ -1,3 +1,5 @@
+local host_prefix = "genivi.org/vin/ubuntu/"
+
 time.now()
 time.sleep(1)
 print(agent.medium_speed_can_table)
@@ -7,4 +9,4 @@ while agent.dbus_connected() do
 	break
 end
 
-rvi.message("genivi.org/vin/anson/smoketest/reply", { a = "why", b = "hello", c = "world" })
+rvi.message(host_prefix .. "smoketest/reply", { a = "why", b = "hello", c = "world" })
