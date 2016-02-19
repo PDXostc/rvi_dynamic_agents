@@ -60,16 +60,18 @@ def receive_reply(a, b, c, timestamp, agent_id):
         print("##########################")
         print("######## SUCCESS #########")
         print("##########################")
-        print("Press Ctrl-C to Exit")
     
     if return_good != None: 
         print("Sandbox environment is not set up correctly")
-        print("Press Ctrl-C to Exit")
 
     if return_bad == None:
         print("Oh no your sandbox isn't sandboxing anything!")
-        print("Press Ctrl-C to Exit")
 
+    dpid = dbus_proc.pid
+    os.kill(dpid, signal.SIGTERM)
+
+    pid = os.getpid()
+    os.kill(pid, signal.SIGTERM)
 
 def run_fake_dbus():
     fake_dbus_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), "..", "src/test_utilities/fake_can_dbus_object.py"))
@@ -130,11 +132,16 @@ if timest == None:
 
     if return_good != None: 
         print("Sandbox environment is not set up correctly")
-        print("Press Ctrl-C to Exit")
 
     if return_bad == None:
         print("Oh no your sandbox isn't sandboxing anything!")
-        print("Press Ctrl-C to Exit")
 
 else:
     pass
+
+
+dpid = dbus_proc.pid
+os.kill(dpid, signal.SIGINT)
+pid = os.getpid()
+os.kill(pid, signal.SIGTERM)
+sys.exit()
