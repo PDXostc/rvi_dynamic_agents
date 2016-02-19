@@ -38,8 +38,27 @@ sudo luarocks install ./deps/lua-websockets-scm-1.rockspec
 * Add in any dbus signals in ./src/lua_libraries/agent.lua
 
 ## Running checks ##
-TODO...
+After setting up all configuration files and the lua_init.lua file looks good you can now run a very rudimentary smoketest to see if all your libraries have been installed correctly. The smoketest does a few things. First it instantiates a fake dbus object that the agent.lua file is expecting with dummy data. Second it registers a smoketest local RVI service which we will invoke. Then it launches a bad script which tries to require the os package to call direct command line controls which should fail. Then it launches a proper dynamic agent script which is listening on the dbus for the dummy messages and will send a message to our smoktest service to trigger the final A-OK check. This will tell you weather or not the smoketest succeeded or failed.
 
+You can run the smoketest by running this command.
+```bash
+./test/smoketest
+```
+
+A correct output should look like this:
+```
+Starting GTK Main
+INVOKED METHOD
+/usr/local/bin/lua: /home/ubuntu/code/jlr/rvi_dynamic_agents/test/send_bad.lua:1: attempt to call a nil value (global 'require')
+stack traceback:
+	/home/ubuntu/code/jlr/rvi_dynamic_agents/test/send_bad.lua:1: in main chunk
+	[C]: in ?
+INVOKED METHOD
+##########################
+######## SUCCESS #########
+##########################
+Press Ctrl-C to Exit
+```
 
 ## Client Side Deployment ##
 **NOTE: If you run the agent_handler as root you must make sure that your dbus session objects are also being run as root or else you will not be able to find them on the dbus!**
