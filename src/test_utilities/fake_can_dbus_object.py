@@ -7,6 +7,7 @@ import can_dbc_reader
 import threading
 import random
 import signal
+import os
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -17,7 +18,7 @@ class can_medium_speed(dbus.service.Object):
     def __init__(self, conn, object_path='/bus/can/can_medium_speed/object'):
         dbus.service.Object.__init__(self, conn, object_path)
         self.name_of_bus = dbus.service.BusName('bus.can.medium_speed', bus=dbus.SessionBus())
-        self.can_table = can_dbc_reader.get_can('fake_utf8_can_dbc.dbc')
+        self.can_table = can_dbc_reader.get_can(os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'fake_utf8_can_dbc.dbc')))
         self.state_table = {}
         self.signal_table = {}
         for key in self.can_table:
