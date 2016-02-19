@@ -1,20 +1,25 @@
 ## Important Dependencies (Currently only tested on Ubuntu) ##
-* Python 2.X 
-* Python 3.X
+* Python 2.7.X
+* Python 3.4.X
 * Python.h (apt-get install python-dev/python3-dev)
-* dbus.h and dbus-arch-deps.h (apt-get -y install dbus libdbus-1-dev libdbus-glib-1-2 libdbus-glib-1-dev)
 * pip/pip3 (Depending on what version of Python you choose to run)
 * Lua 5.3.X
 * Luarocks (Package Manager | Most recent version)
+* dbus.h and dbus-arch-deps.h (apt-get -y install dbus libdbus-1-dev libdbus-glib-1-2 libdbus-glib-1-dev)
 * Linux environment that allows symlinking
 
 ## Other important things to have ##
 * A valid can database file (*.dbc) so you can input into our dbus can object simulator for tests (Has default fake emulator)
+* A running RVI node running the most recent code. Preferably release 0.5.0. https://github.com/pdxostc/rvi_core
 
 
-## Installing ##
+## Installing Environment ##
 Make sure that all dependencies are met before continuing
 ```bash
+git clone https://github.com/PDXostc/rvi_dynamic_agents.git
+
+cd rvi_dynamic_agents
+
 sudo <pip | pip3 > install -r ./deps/python/python_requirements.txt
 
 sudo luarocks install ./deps/lua/ldbus-scm-0.rockspec DBUS_INCDIR=/<path>/<to>/dbus.h DBUS_ARCH_INCDIR=/<path>/<to>/dbus-arch-deps.h
@@ -27,7 +32,14 @@ sudo luarocks install ./deps/lua-websockets-scm-1.rockspec
 
 ```
 
+## Setting Configurations ##
+* Check the agent_handler_config.py settings file.
+* Check the Lua sandbox environment in ./src/lua_libraries/lua_init.lua
+* Add in any dbus signals in ./src/lua_libraries/agent.lua
+
 ## Running checks ##
+TODO...
+
 
 ## Client Side Deployment ##
 **NOTE: If you run the agent_handler as root you must make sure that your dbus session objects are also being run as root or else you will not be able to find them on the dbus!**
