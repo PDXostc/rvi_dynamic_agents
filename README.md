@@ -48,6 +48,14 @@ You can run the smoketest by running this command.
 
 A correct output should look like this:
 ```
+Please make sure you have edited the send_proper.lua file with your host prefix e.x. genivi.org/vin/ubuntu/
+Continue [Y/N]: Y
+Please enter RVI websocket server port(Default is 9008): 9008
+Websocket port inputted: 9008
+Please enter in your Lua interpreter path(Default would be '/usr/local/bin/lua'): /usr/local/bin/lua 
+Given lua interpreter path: /usr/local/bin/lua
+Does the above information entered look correct?
+Continue [Y/N]: Y
 Starting GTK Main
 INVOKED METHOD
 /usr/local/bin/lua: /home/ubuntu/code/jlr/rvi_dynamic_agents/test/send_bad.lua:1: attempt to call a nil value (global 'require')
@@ -58,7 +66,7 @@ INVOKED METHOD
 ##########################
 ######## SUCCESS #########
 ##########################
-Press Ctrl-C to Exit
+Terminated
 ```
 
 ## Client Side Deployment ##
@@ -67,6 +75,8 @@ Press Ctrl-C to Exit
 Edit the agent_handler_config.py file. You can change the name of the registered services and the RVI_WS_HOST is probably the most important setting to change to reflect what your actual node is using for the websocket server port.
 
 If you wish to add additional signals into the agent sandbox for the time being you must do so manually in the ./src/lua/agent.lua file in the section "DBus signals to subscribe to" section.
+
+To run the agent_handler you can set up systemd integration or simply a crontab since it is fairly resistant. To launch the agent_handler manually just call the command "python/python3 ./src/agent_handler.py" and then you can invoke the RVI services which will then handle your agents.
 
 
 ## Deploying Agents ##
