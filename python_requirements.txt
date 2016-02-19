@@ -1,0 +1,7 @@
+#
+##### Dynamic Agents Python Requirements, compatible with both Python2.X and Python3.X #####
+#
+
+websocket-client
+psutil
+
