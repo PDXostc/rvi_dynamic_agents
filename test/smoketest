@@ -49,26 +49,26 @@ def register_service():
     rvi_client.services_run()
 
 def run_agent():
-    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( '__file__' ), '..', 'src/lua_sandbox'))
-    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( '__file__' ), '..', 'src/lua_sandbox/lua_init.lua'))
-    command = os.path.abspath(os.path.join(os.path.dirname( '__file__' ), 'send_proper.lua'))
+    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox'))
+    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox/lua_init.lua'))
+    command = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'send_proper.lua'))
     global agent_proc
     global return_good
     try:
-        agent_proc = subprocess.check_output(('(cd '+ sandbox_path + '; LUA_INIT=@' + sandbox_file + ' /usr/local/bin/lua ' + command + ')'), shell=True)
+        agent_proc = subprocess.check_output(('(cd '+ str(sandbox_path) + '; LUA_INIT=@' + str(sandbox_file) + ' /usr/local/bin/lua ' + command + ')'), shell=True)
         return_good = agent_proc
     except subprocess.CalledProcessError as runage:
         return_good = runage.returncode                                                                                                   
         # print "error code", runage.returncode
 
 def bad_agent():
-    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( '__file__' ), '..', 'src/lua_sandbox'))
-    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( '__file__' ), '..', 'src/lua_sandbox/lua_init.lua'))
-    command = os.path.abspath(os.path.join(os.path.dirname( '__file__' ), 'send_bad.lua'))
+    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox'))
+    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox/lua_init.lua'))
+    command = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'send_bad.lua'))
     global bad_proc
     global return_bad
     try:
-        bad_proc = subprocess.check_output(('(cd '+ sandbox_path + '; LUA_INIT=@' + sandbox_file + ' /usr/local/bin/lua ' + command + ')'), shell=True)
+        bad_proc = subprocess.check_output(('(cd '+ str(sandbox_path) + '; LUA_INIT=@' + str(sandbox_file) + ' /usr/local/bin/lua ' + command + ')'), shell=True)
         return_bad = bad_proc
     except subprocess.CalledProcessError as badage: 
         return_bad = badage.returncode                                                                                                  
