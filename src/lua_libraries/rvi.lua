@@ -16,7 +16,7 @@ local function message(service, payload)
     to_send['method'] = 'message'
     to_send['params'] = {}
     to_send['params']['service_name'] = service
-    to_send['params']['timeout'] = os.time() + 60
+    to_send['params']['timeout'] = time.now() + 60
     
     to_send['params']['parameters'] = {}
     to_send['params']['parameters']['timestamp'] = tostring(time.now())
