@@ -137,6 +137,14 @@ agent:
 Typical Event Loop code:
 ```Lua
 while agent.dbus_connected() do 
+	local msg = agent.get_event()
+
+	-- Do something with the msg for example--	
+	agent.medium_speed_can_table[signal] compare with msg[sig_value]
+
 	...
+	if condition do
+		rvi.message(<service>, {a='b', c='d'})
+	end
 end
 ```
