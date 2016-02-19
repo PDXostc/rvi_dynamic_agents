@@ -74,6 +74,7 @@ Expected Parameters:
 ## Current Agent API ##
 The default Lua sandbox environment at the current moment can be found in the ./src/lua_libraries/lua_init.lua file. The 4 additional libraries that are include in addition to the base runtime environment are as follow:
 
+```
 cjson: 
 	Documentation can be found at http://www.kyne.com.au/~mark/software/lua-cjson-manual.html
 
@@ -130,6 +131,8 @@ agent:
 				sig_value = int or float value,
 			}
 	}
+
+```
 
 Typical Event Loop code:
 ```Lua
