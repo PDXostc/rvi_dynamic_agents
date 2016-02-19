@@ -7,7 +7,12 @@ local agent = {
 }
 
 assert(assert(ldbus.bus.request_name(agent.conn , "dynamicagent.signal.sink" , {replace_existing = true})) == "primary_owner" , "Not Primary Owner")
+
+-- DBus signals to subscribe to --
 assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='bus.can.update.can_medium_speed'"))
+
+----------------------------------
+
 agent.conn:flush()
 
 local function get_event()

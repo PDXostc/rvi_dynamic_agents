@@ -9,6 +9,7 @@ import os
 import base64
 import agent_handler_config as settings
 import rvi_ws
+import signal
 
 try:
     import thread
@@ -16,6 +17,7 @@ try:
 except ImportError:
     import _thread as thread
 
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 #DEBUG MESSAGING PRINTOUTS
 DEBUG = settings.DEBUG_TOGGLE
@@ -53,7 +55,7 @@ def print_debug(message):
         pass
 
 def sandbox_launch(launch_cmd):
-    pwd = os.getcwd()
+    pwd = os.path.realpath(__file__)
     sandbox_path = pwd + settings.LUA_SANDBOX_PATH
     sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
     print_debug('(cd '+ sandbox_path + '; LUA_INIT=@' + sandbox_file + ' ' + launch_cmd + ')')
@@ -298,12 +300,12 @@ def kill_agent(agent):
 if __name__ == "__main__":
     #Attempt to load in our previous agent mapping if not create the agent map file which will store our mapping
     try:
-        agent_map = open('agent_map.txt', 'r+')
+        agent_map = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'agent_map.txt'), 'r+')
         agent_pool = json.load(agent_map)
         agent_map.close()
 
     except:
-        agent_map = open('agent_map.txt', 'w+')
+        agent_map = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'agent_map.txt'), 'w+')
         json.dump(agent_pool, agent_map)
         agent_map.close()
 

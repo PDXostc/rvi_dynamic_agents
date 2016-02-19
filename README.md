@@ -1,17 +1,20 @@
 ## Important Dependencies (Currently only tested on Ubuntu) ##
-* Python 2.X
+* make (apt-get install make)
+* Python 2.X 
 * Python 3.X
+* Python.h (apt-get install python-dev/python3-dev)
+* dbus.h and dbus-arch-deps.h (apt-get -y install dbus libdbus-1-dev libdbus-glib-1-2 libdbus-glib-1-dev)
 * pip/pip3 (Depending on what version of Python you choose to run)
+* Linux environment that allows symlinking
 
-## Requiements ##
+## Other important things to have ##
+* A valid can database file (*.dbc) so you can input into our dbus can object simulator for tests
 
+## Installing ##
+
+## Running checks ##
 
 ## Client Side Deployment ##
-	1. Make sure RVI is running
-	2. Clone the repo
-	3. cd into repo i.e. "cd rvi_dynamic_agents"
-	4. Make sure if you are tracking can signals that you have enabled your can link "sudo ip link set can0 up type can bitrate <XXXXX>" 
-	5. python3 agenthandler.py
 
 ## Deploying Agents ##
 
