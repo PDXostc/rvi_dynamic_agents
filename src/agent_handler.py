@@ -55,7 +55,7 @@ def print_debug(message):
         pass
 
 def sandbox_launch(launch_cmd):
-    pwd = os.path.realpath(__file__)
+    pwd = os.path.dirname(os.path.realpath(__file__))
     sandbox_path = pwd + settings.LUA_SANDBOX_PATH
     sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
     print_debug('(cd '+ sandbox_path + '; LUA_INIT=@' + sandbox_file + ' ' + launch_cmd + ')')
@@ -92,7 +92,7 @@ def terminate_agent(agent_id):
 
     lock.acquire()
     try:
-        pwd = os.path.realpath(__file__)
+        pwd = os.path.dirname(os.path.realpath(__file__))
         save_path = pwd + settings.AGENT_SAVE_DIRECTORY
 
         #Grab the agent's corresponding launch_command and expiration_date
@@ -245,7 +245,7 @@ def new_agent(agent, expires, agent_code, launch=None):
     ret1, ret2 = lookup_id(agent)
     if ret1 == None and ret2 == None: 
     
-        pwd = os.path.realpath(__file__)
+        pwd = os.path.dirname(os.path.realpath(__file__))
         sandbox_path = pwd + settings.LUA_SANDBOX_PATH
         sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
         save_path = pwd + settings.AGENT_SAVE_DIRECTORY

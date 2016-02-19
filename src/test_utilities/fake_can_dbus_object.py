@@ -67,6 +67,7 @@ def emit_can_signals(can_obj):
             random_value = random.randint(0,15)
             can_obj.signal_table[signal] = random_value
             can_obj.update_frame(json.dumps({'signal_type':'VEHICLE_SIGNAL', 'signal_id':signal, 'value':random_value}))
+            time.sleep(0.05)
         value += 1
         time.sleep(5)
 

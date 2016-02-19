@@ -3,6 +3,7 @@
 * Python 3.4.X
 * Python.h (apt-get install python-dev/python3-dev)
 * pip/pip3 (Depending on what version of Python you choose to run)
+* python-dbus/python3-dbus (apt-get install python-dbus/python3-dbus)
 * Lua 5.3.X
 * Luarocks (Package Manager | Most recent version)
 * dbus.h and dbus-arch-deps.h (apt-get -y install dbus libdbus-1-dev libdbus-glib-1-2 libdbus-glib-1-dev)
