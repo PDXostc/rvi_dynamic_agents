@@ -1,47 +1,181 @@
 ## Important Dependencies (Currently only tested on Ubuntu) ##
-* Python 2.X
-* Python 3.X
-* python-can (python3 install)
-* websocket-client (python-pip3)
-* psutil (python-pip3)
+* Python 2.7.X
+* Python 3.4.X
+* Python.h (apt-get install python-dev/python3-dev)
+* pip/pip3 (Depending on what version of Python you choose to run)
+* Lua 5.3.X
+* Luarocks (Package Manager | Most recent version)
+* dbus.h and dbus-arch-deps.h (apt-get -y install dbus libdbus-1-dev libdbus-glib-1-2 libdbus-glib-1-dev)
+* Linux environment that allows symlinking
 
-#### Optional for backend ####
-	* flask 
-	* redis 
+## Other important things to have ##
+* A valid can database file (*.dbc) so you can input into our dbus can object simulator for tests (Has default fake emulator)
+* A running RVI node running the most recent code. Preferably release 0.5.0. https://github.com/pdxostc/rvi_core
 
-## Requiements ##
-	1. RVI setup on both the client side and the server side and can communicate with each other.
-		-Please refer to https://github.com/PDXostc/rvi_core for more information
-	2. RVI backend is installed to push agents to client.
-		-Please refer to https://github.com/PDXostc/rvi_backend for more information to find the backend w/ dynamic_agent code
-	3. All dependencies are met
- 
-## Server Side Deployment ##
-	1. Make sure RVI is running
-	2. Clone the repo
-	3. cd into repo i.e. "cd rvi_dynamic_agents"
-	#### Optional Redis Server and Flask Counter Demo Setup ####
-	  1. Install flask and redis
-	  2. Make sure redis server is setup
-	  3. Change flaskserver/demoagentsite.py to make sure your redis client will work if not using default setup
-	  4. python flaskserver/demoagentsite.py
-	  5. Access and see reported agent counts at localhost:5000
-	4. python3 agentserver/agentserver.py
+
+## Installing Environment ##
+Make sure that all dependencies are met before continuing
+```bash
+git clone https://github.com/PDXostc/rvi_dynamic_agents.git
+
+cd rvi_dynamic_agents
+
+sudo <pip | pip3 > install -r ./deps/python/python_requirements.txt
+
+sudo luarocks install ./deps/lua/ldbus-scm-0.rockspec DBUS_INCDIR=/<path>/<to>/dbus.h DBUS_ARCH_INCDIR=/<path>/<to>/dbus-arch-deps.h
+
+sudo luarocks install ./deps/lua/lua-cjson-2.1devel-1.rockspec
+
+sudo luarocks install ./deps/lua/luasocket-scm-0.rockspec
+
+sudo luarocks install ./deps/lua-websockets-scm-1.rockspec
+
+```
+
+## Setting Configurations ##
+* Check the agent_handler_config.py settings file.
+* Check the Lua sandbox environment in ./src/lua_libraries/lua_init.lua
+* Add in any dbus signals in ./src/lua_libraries/agent.lua
+
+## Running checks ##
+After setting up all configuration files and the lua_init.lua file looks good you can now run a very rudimentary smoketest to see if all your libraries have been installed correctly. The smoketest does a few things. First it instantiates a fake dbus object that the agent.lua file is expecting with dummy data. Second it registers a smoketest local RVI service which we will invoke. Then it launches a bad script which tries to require the os package to call direct command line controls which should fail. Then it launches a proper dynamic agent script which is listening on the dbus for the dummy messages and will send a message to our smoktest service to trigger the final A-OK check. This will tell you weather or not the smoketest succeeded or failed.
+
+You can run the smoketest by running this command.
+```bash
+./test/smoketest
+```
+
+A correct output should look like this:
+```
+Starting GTK Main
+INVOKED METHOD
+/usr/local/bin/lua: /home/ubuntu/code/jlr/rvi_dynamic_agents/test/send_bad.lua:1: attempt to call a nil value (global 'require')
+stack traceback:
+	/home/ubuntu/code/jlr/rvi_dynamic_agents/test/send_bad.lua:1: in main chunk
+	[C]: in ?
+INVOKED METHOD
+##########################
+######## SUCCESS #########
+##########################
+Press Ctrl-C to Exit
+```
 
 ## Client Side Deployment ##
-	1. Make sure RVI is running
-	2. Clone the repo
-	3. cd into repo i.e. "cd rvi_dynamic_agents"
-	4. Make sure if you are tracking can signals that you have enabled your can link "sudo ip link set can0 up type can bitrate <XXXXX>" 
-	5. python3 agenthandler.py
+**NOTE: If you run the agent_handler as root you must make sure that your dbus session objects are also being run as root or else you will not be able to find them on the dbus!**
+
+Edit the agent_handler_config.py file. You can change the name of the registered services and the RVI_WS_HOST is probably the most important setting to change to reflect what your actual node is using for the websocket server port.
+
+If you wish to add additional signals into the agent sandbox for the time being you must do so manually in the ./src/lua/agent.lua file in the section "DBus signals to subscribe to" section.
+
 
 ## Deploying Agents ##
-	1. Make sure RVI is running
-	2. Clone the rvi_backend repo
-	3. Follow setup instructions for the rvi_backend repo
-	4. Add a vehicle and make sure the vin is what you set up for RVI
-	5. Add an Agent where launch command is how you would launch your script 
-	  * For example python3 script ABC.py would be launched with "python3 ABC.py"
-	6. Add an update choosing which agent you wish to send to which vehicle and its expiration date
-	7. Click checkbox and select start agent from dropdown list and hit go.
-	8. Agent should not be running, you are also able to remotely terminate from this page.
+The current agent_handler code will spawn 2 RVI services. These 2 services are described below and what they are expected to have passed in.
+
+```
+<RVI_PREFIX>/dynamicagents/agent
+Expected Parameters:
+	agent = {
+		Expected Type = String
+		Description = A symbolic name of the agent we will be registering. This will be translated to the agent_id in how we reference the agents internally.
+	}
+	expires = {
+		Expected Type = String or Float or Int of Unix Epoch time
+		Description = A Unix Epoch time of when the agent should self terminate. 
+	}
+	agent_code = {
+		Expected Type = Base64 Encoded String
+		Description = The actual executable Lua code that is Base64 Encoded of UTF-8 Encoding. Expected Python encoding method is "base64.b64encode(<CODESTRING>.encode('UTF-8'))"
+	}
+	launch = { //NOT CURRENTLY USED
+		Expected Type = String
+		Description = Launch command of the script. Currently not used since we only support Lua sandboxing but future iterations may support all types of languages!
+	}
+
+
+
+<RVI_PREFIX>/dynamicagents/terminate_agent
+Expected Parameters:
+	agent = {
+		Expected Type = String
+		Description = A symbolic name of the agent we will be registering. This will be translated to the agent_id in how we reference the agents internally. Same agent string we used to register the agent on the client.
+	}
+
+```
+
+## Current Agent API ##
+The default Lua sandbox environment at the current moment can be found in the ./src/lua_libraries/lua_init.lua file. The 4 additional libraries that are include in addition to the base runtime environment are as follow:
+
+```
+cjson: 
+	Documentation can be found at http://www.kyne.com.au/~mark/software/lua-cjson-manual.html
+
+time:
+	time.time() = {
+		Expected Parameters:
+			None
+
+		Return = Unix Epoch timestamp with millisecond precision
+	}
+	time.sleep(n) = {
+		Expected Parameters:
+			n = {
+				Expected Type = int | float
+				Description = Number of seconds you wish your agent to sleep for
+			}
+
+		Return = void, agent process will sleep for specified number of seconds
+	}
+
+rvi:
+	rvi.message(service,payload) = {
+		Expected Parameters:
+			service = {
+				Expected Type = String
+				Description = Target rvi service endpoint which you wish to send a message to. AKA a logging RVI service endpoint would be ideal.
+			}
+			payload = {
+				Expected Type = Table
+				Description = Table that is able to be cast into a JSON string. This can contain key values which you wish to report back to the backend server.
+			}
+
+		Return = True | False , depending on success or failure of message send
+	}
+
+agent:
+	agent.medium_speed_can_table = Table to current medium speed can table value which was given by a invoked method call.
+
+	agent.dbus_connected() = {
+		Expected Parameters:
+			None
+
+		Return = True, Will block until True is returned thus notifying that there is something in the dbus message queue.
+		Note = It would be best to use this as the main event loop i.e. while agent.dbus_connected() do...
+	}
+
+	agent.get_event() = {
+		Expected Parameters:
+			None
+		Return = Table that will look like this:
+			{
+				signal_type = 'VEHICLE_SIGNAL',
+				signal_id = int signal id,
+				sig_value = int or float value,
+			}
+	}
+
+```
+
+Typical Event Loop code:
+```Lua
+while agent.dbus_connected() do 
+	local msg = agent.get_event()
+
+	-- Do something with the msg for example--	
+	agent.medium_speed_can_table[signal] compare with msg[sig_value]
+
+	...
+	if condition do
+		rvi.message(<service>, {a='b', c='d'})
+	end
+end
+```

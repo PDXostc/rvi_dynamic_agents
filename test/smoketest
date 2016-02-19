@@ -1,0 +1,108 @@
+#!/usr/bin/python
+
+import os
+import threading
+import subprocess
+import rvi_ws
+import websocket
+import sys
+import time
+import signal
+
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+dbus_proc = None
+agent_proc = None
+bad_proc = None
+return_bad = None
+return_good = None
+timest = None
+
+def receive_reply(a, b, c, timestamp, agent_id):
+    global timest
+    timest = timestamp
+
+
+    if a == "why" and return_good == None and return_bad == 1:
+        print("##########################")
+        print("######## SUCCESS #########")
+        print("##########################")
+        print("Press Ctrl-C to Exit")
+    
+    if return_good != None: 
+        print("Sandbox environment is not set up correctly")
+        print("Press Ctrl-C to Exit")
+
+    if return_bad == None:
+        print("Oh no your sandbox isn't sandboxing anything!")
+        print("Press Ctrl-C to Exit")
+
+
+def run_fake_dbus():
+    fake_dbus_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/test_utilities/fake_can_dbus_object.py'))
+    global dbus_proc
+    dbus_proc = subprocess.Popen(['/usr/bin/python', fake_dbus_file])
+
+def register_service():
+    rvi_client = rvi_ws.rvi_ws_client(bundle_id = "smoketest", host = "ws://localhost:8808", debug = False)
+    rvi_client.register_services({"reply":receive_reply})
+    rvi_client.services_run()
+
+def run_agent():
+    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox'))
+    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox/lua_init.lua'))
+    command = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'send_proper.lua'))
+    global agent_proc
+    global return_good
+    try:
+        agent_proc = subprocess.check_output(('(cd '+ str(sandbox_path) + '; LUA_INIT=@' + str(sandbox_file) + ' /usr/local/bin/lua ' + command + ')'), shell=True)
+        return_good = agent_proc
+    except subprocess.CalledProcessError as runage:
+        return_good = runage.returncode                                                                                                   
+        # print "error code", runage.returncode
+
+def bad_agent():
+    sandbox_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox'))
+    sandbox_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/lua_sandbox/lua_init.lua'))
+    command = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'send_bad.lua'))
+    global bad_proc
+    global return_bad
+    try:
+        bad_proc = subprocess.check_output(('(cd '+ str(sandbox_path) + '; LUA_INIT=@' + str(sandbox_file) + ' /usr/local/bin/lua ' + command + ')'), shell=True)
+        return_bad = bad_proc
+    except subprocess.CalledProcessError as badage: 
+        return_bad = badage.returncode                                                                                                  
+        # print "error code", badage.returncode
+
+
+services = threading.Thread(target=register_service)
+services.start()
+
+fakedbus = threading.Thread(target=run_fake_dbus)
+fakedbus.start()
+time.sleep(2)
+
+bad_agent()
+
+time.sleep(1)
+
+run_agent()
+
+time.sleep(5)
+
+if timest == None:
+    print("##########################")
+    print("######### FAILED #########")
+    print("##########################")
+    print("\nLooks like you're not sending anything through in the sandboxed env. Maybe you're missing some Lua library installations")
+
+    if return_good != None: 
+        print("Sandbox environment is not set up correctly")
+        print("Press Ctrl-C to Exit")
+
+    if return_bad == None:
+        print("Oh no your sandbox isn't sandboxing anything!")
+        print("Press Ctrl-C to Exit")
+
+else:
+    pass
