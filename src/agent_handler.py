@@ -92,7 +92,7 @@ def terminate_agent(agent_id):
 
     lock.acquire()
     try:
-        pwd = os.getcwd()
+        pwd = os.path.realpath(__file__)
         save_path = pwd + settings.AGENT_SAVE_DIRECTORY
 
         #Grab the agent's corresponding launch_command and expiration_date
