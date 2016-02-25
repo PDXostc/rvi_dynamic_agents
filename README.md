@@ -78,6 +78,8 @@ If you wish to add additional signals into the agent sandbox for the time being 
 
 To run the agent_handler you can set up systemd integration or simply a crontab since it is fairly resistant. To launch the agent_handler manually just call the command "python/python3 ./src/agent_handler.py" and then you can invoke the RVI services which will then handle your agents.
 
+If you need a fake dbus object for the agent.lua file to load there is one located in ./src/test_utilities/fake_can_dbus_object.py 
+You can use Python2 or Python3 to run this dbus object and now the sandbox environment should be able to be launched. 
 
 ## Deploying Agents ##
 The current agent_handler code will spawn 2 RVI services. These 2 services are described below and what they are expected to have passed in.
@@ -115,6 +117,8 @@ Expected Parameters:
 
 ## Current Agent API ##
 The default Lua sandbox environment at the current moment can be found in the ./src/lua_libraries/lua_init.lua file. The 4 additional libraries that are include in addition to the base runtime environment are as follow:
+
+The agent.lua API will be heavily modified in the near future when we get more defined standards of how we wish to pass messages between different services. 
 
 ```
 cjson: 

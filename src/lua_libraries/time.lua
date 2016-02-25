@@ -8,7 +8,7 @@ local function sleep(n)
 end
 
 local function now()
-	return socket.gettime()
+	return math.floor(socket.gettime()*1000)
 end
 
 time.sleep = sleep
