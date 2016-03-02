@@ -1,6 +1,20 @@
 local websocket = require("websocket")
 local json = require("cjson.safe")
 local time = require("time")
+local uuid = nil
+
+-- COMMENT THIS SECTION OUT AND CHANGE uuid IF NOT USING DEFAULT RVI UUID --
+local cmdline = io.open("/proc/cmdline")
+cmdline.close()
+local read_file = cmdline:read("*all")
+local uuid = nil
+
+for i in string.gmatch(read_file, "%S+") do
+    if string.match(i, "root=UUID=") then
+        uuid = string.gsub(i, "root=UUID=", "")
+    end
+end
+-- ---------------------------------------------------------------------- --
 
 local rvi = {}
 
@@ -21,9 +35,8 @@ local function message(service, payload)
     to_send['params']['parameters'] = {}
     to_send['params']['parameters']['timestamp'] = tostring(time.now())
     to_send['params']['parameters']['agent_id'] = arg[0]
-    for key, value in pairs(payload) do 
-        to_send['params']['parameters'][key] = value 
-    end
+    to_send['params']['parameters']['uuid'] = uuid
+    to_send['params']['parameters']['payload'] = payload
 
     client:connect(ws_target_host, ws_target_topic)
     local ok,close_was_clean,close_code,close_reason = client:send(json.encode(to_send),websocket.TEXT)

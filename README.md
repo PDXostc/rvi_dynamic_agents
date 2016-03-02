@@ -37,6 +37,7 @@ sudo luarocks install ./deps/lua-websockets-scm-1.rockspec
 * Check the agent_handler_config.py settings file.
 * Check the Lua sandbox environment in ./src/lua_libraries/lua_init.lua
 * Add in any dbus signals in ./src/lua_libraries/agent.lua
+* In the src/lua_libraries/rvi.lua CHANGE THE uuid to a uuid you can match or else we will use the default RVI uuid which takes the "root=UUID=" found in /proc/cmdline
 
 ## Running checks ##
 After setting up all configuration files and the lua_init.lua file looks good you can now run a very rudimentary smoketest to see if all your libraries have been installed correctly. The smoketest does a few things. First it instantiates a fake dbus object that the agent.lua file is expecting with dummy data. Second it registers a smoketest local RVI service which we will invoke. Then it launches a bad script which tries to require the os package to call direct command line controls which should fail. Then it launches a proper dynamic agent script which is listening on the dbus for the dummy messages and will send a message to our smoktest service to trigger the final A-OK check. This will tell you weather or not the smoketest succeeded or failed.

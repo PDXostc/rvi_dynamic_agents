@@ -38,7 +38,7 @@ class can_medium_speed(dbus.service.Object):
     # def map_values(self, arb_id, payload):
     #     num_bits = self.can_table[arb_id]['frame_bytes'] * 8
     #     for signal, specs in self.can_table[arb_id]['species'].items():
-    #         sig_value = ((payload >> (num_bits - (specs['end_bit']-specs['length']+1) ) & (self.get_mask_ones(length=specs['length'], maximum = ((2**num_bits)-1)))) * specs['factor']) + specs['offset']
+    #         sig_value = ((payload >> ((specs['end_bit']-specs['length']+1) ) & (self.get_mask_ones(length=specs['length'], maximum = ((2**num_bits)-1)))) * specs['factor']) + specs['offset']
     #         if specs['value'] == sig_value:
     #             pass
     #         else:
@@ -80,7 +80,7 @@ def emit_can_signals(can_obj):
 
     #     elif int(message.arbitration_id) not in can_object.can_table:
     #         can_object.state_table[int(message.arbitration_id)] = message.data
-    #         can_object.map_values(arb_id = int(message.arbitration_id), payload = int.from_bytes(message.data, byteorder='big', signed=False))
+    #         can_object.map_values(arb_id = int(message.arbitration_id), payload = int.from_bytes(message.data, byteorder='little', signed=False))
     #         continue
 
     #     elif message.data == can_object.state_table[int(message.arbitration_id)]: 
@@ -88,7 +88,7 @@ def emit_can_signals(can_obj):
 
     #     else:
     #         can_object.state_table[int(message.arbitration_id)] = message.data
-    #         can_object.map_values(arb_id = int(message.arbitration_id), payload = int.from_bytes(message.data, byteorder='big', signed=False))
+    #         can_object.map_values(arb_id = int(message.arbitration_id), payload = int.from_bytes(message.data, byteorder='little', signed=False))
 
 
 
@@ -102,22 +102,3 @@ if __name__ == '__main__':
 
     print('Starting GTK Main')
     gtk.main()
-    # can_interface = 'can0'
-    # bus = can.interface.Bus(can_interface, bustype='socketcan_native')
-
-    # for message in bus:
-    #     if int(message.arbitration_id) not in can_object.can_table:
-    #         print('!!! WARNING UNKNOWN CAN FRAME !!!')
-
-    #     elif int(message.arbitration_id) not in can_object.can_table:
-    #         can_object.state_table[int(message.arbitration_id)] = message.data
-    #         can_object.map_values(arb_id = int(message.arbitration_id), payload = int.from_bytes(message.data, byteorder='big', signed=False))
-    #         continue
-
-    #     elif message.data == can_object.state_table[int(message.arbitration_id)]: 
-    #         continue
-
-    #     else:
-    #         can_object.state_table[int(message.arbitration_id)] = message.data
-    #         can_object.map_values(arb_id = int(message.arbitration_id), payload = int.from_bytes(message.data, byteorder='big', signed=False))
-
