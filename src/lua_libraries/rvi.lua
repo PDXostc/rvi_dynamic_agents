@@ -4,7 +4,7 @@ local time = require("time")
 local uuid = nil
 local full_path = (arg[0]):match("^.+/(.+)$")
 
-if full_path == nil:
+if full_path == nil then
     full_path = arg[0]
 end
 
@@ -23,7 +23,7 @@ end
 
 local rvi = {}
 
-local ws_target_host = "ws://localhost:8808"
+local ws_target_host = "ws://localhost:9008"
 local ws_target_topic = "rvi"
 
 local client = websocket.client.sync()
