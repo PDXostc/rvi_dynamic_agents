@@ -2,6 +2,11 @@ local websocket = require("websocket")
 local json = require("cjson.safe")
 local time = require("time")
 local uuid = nil
+local full_path = (arg[0]):match("^.+/(.+)$")
+
+if full_path == nil:
+    full_path = arg[0]
+end
 
 -- COMMENT THIS SECTION OUT AND CHANGE uuid IF NOT USING DEFAULT RVI UUID --
 local cmdline = io.open("/proc/cmdline")
@@ -34,7 +39,7 @@ local function message(service, payload)
     
     to_send['params']['parameters'] = {}
     to_send['params']['parameters']['timestamp'] = tostring(time.now())
-    to_send['params']['parameters']['agent_id'] = arg[0]
+    to_send['params']['parameters']['agent_id'] = full_path
     to_send['params']['parameters']['uuid'] = uuid
     to_send['params']['parameters']['payload'] = payload
 
