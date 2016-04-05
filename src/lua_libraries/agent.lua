@@ -10,7 +10,8 @@ assert(assert(ldbus.bus.request_name(agent.conn , "dynamicagent.signal.sink" , {
 
 -- DBus signals to subscribe to --
 assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='bus.can.update.can_medium_speed'"))
-
+-- assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.fmradio'"))
+-- assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.'"))
 ----------------------------------
 
 agent.conn:flush()
@@ -28,6 +29,8 @@ local function get_event()
                     if payload == nil then
                     elseif payload['signal_type'] == 'VEHICLE_SIGNAL' then
                         agent.medium_speed_can_table[payload['signal_id']] = payload['value']
+                        return payload
+                    elseif payload['signal_type'] == 'HMI_EVENT' then
                         return payload
                     else 
                     end

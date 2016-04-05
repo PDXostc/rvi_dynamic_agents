@@ -51,12 +51,12 @@ while no_yes == None:
     else:
         print("Not a valid command")
 
-def receive_reply(a, b, c, timestamp, agent_id):
+def receive_reply(payload, timestamp, agent_id, uuid):
     global timest
     timest = timestamp
 
 
-    if a == "why" and return_good == None and return_bad == 1:
+    if payload["a"] == "why" and return_good == None and return_bad == 1:
         print("##########################")
         print("######## SUCCESS #########")
         print("##########################")
