@@ -1,4 +1,4 @@
-local host_prefix = "genivi.org/node/afan1/"
+local host_prefix = "genivi.org/node/test-node/"
 
 time.now()
 time.sleep(1)

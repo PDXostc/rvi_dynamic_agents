@@ -1,7 +1,8 @@
 local websocket = require("websocket")
 local json = require("cjson.safe")
 local time = require("time")
-local uuid = nil
+
+local uuid = "DEFAULT_UUID"
 local full_path = (arg[0]):match("^.+/(.+)$")
 
 if full_path == nil then
@@ -9,16 +10,15 @@ if full_path == nil then
 end
 
 -- COMMENT THIS SECTION OUT AND CHANGE uuid IF NOT USING DEFAULT RVI UUID --
-local cmdline = io.open("/proc/cmdline")
-cmdline.close()
-local read_file = cmdline:read("*all")
-local uuid = nil
+-- local cmdline = io.open("/proc/cmdline")
+-- local read_file = cmdline:read("*all")
+-- cmdline.close()
 
-for i in string.gmatch(read_file, "%S+") do
-    if string.match(i, "root=UUID=") then
-        uuid = string.gsub(i, "root=UUID=", "")
-    end
-end
+-- for i in string.gmatch(read_file, "%S+") do
+--     if string.match(i, "root=UUID=") then
+--         uuid = string.gsub(i, "root=UUID=", "")
+--     end
+-- end
 -- ---------------------------------------------------------------------- --
 
 local rvi = {}

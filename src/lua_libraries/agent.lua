@@ -10,8 +10,8 @@ assert(assert(ldbus.bus.request_name(agent.conn , "dynamicagent.signal.sink" , {
 
 -- DBus signals to subscribe to --
 assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='bus.can.update.can_medium_speed'"))
--- assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.fmradio'"))
--- assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.'"))
+assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.fmradio'"))
+assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.mediaManager'"))
 ----------------------------------
 
 agent.conn:flush()
@@ -54,6 +54,12 @@ local function dbus_connected()
     return agent.conn:read_write_dispatch()
 end
 
+local function signal_subscribe(sub)
+    assert(ldbus.bus.add_match(agent.conn, "type='signal',interface=" .. "'" .. sub .. "'"))
+    agent.conn:flush()
+end
+
+agent.signal_subscribe = signal_subscribe
 agent.get_event = get_event
 -- agent.get_signals_table = get_signals_table
 agent.dbus_connected = dbus_connected
