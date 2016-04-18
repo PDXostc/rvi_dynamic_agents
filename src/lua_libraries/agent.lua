@@ -6,7 +6,13 @@ local agent = {
     conn = assert(ldbus.bus.get("session"))
 }
 
-assert(assert(ldbus.bus.request_name(agent.conn , "dynamicagent.signal.sink" , {replace_existing = true})) == "primary_owner" , "Not Primary Owner")
+local full_path = (arg[0]):match("^.+/(.+)$")
+
+if full_path == nil then
+    full_path = arg[0]
+end
+
+assert(assert(ldbus.bus.request_name(agent.conn , "dynamicagent.signal.sink"..full_path , {replace_existing = true})) == "primary_owner" , "Not Primary Owner")
 
 -- DBus signals to subscribe to --
 assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='bus.can.update.can_medium_speed'"))
@@ -20,7 +26,7 @@ local function get_event()
     while agent.conn:read_write(0) do
         local msg = agent.conn:pop_message()
         if not msg then
-            ;
+            agent.conn:read_write_dispatch()
         elseif msg:get_type () == 'signal' then
             local iter = ldbus.message.iter.new()
             if msg:iter_init(iter) then
