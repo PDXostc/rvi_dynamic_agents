@@ -15,9 +15,10 @@ end
 assert(assert(ldbus.bus.request_name(agent.conn , "dynamicagent.signal.sink"..full_path , {replace_existing = true})) == "primary_owner" , "Not Primary Owner")
 
 -- DBus signals to subscribe to --
-assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='bus.can.update.can_medium_speed'"))
-assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.fmradio'"))
-assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.mediaManager'"))
+-- Optionally assert default interfaces/signals to listen to for all agents
+-- assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='bus.can.update.can_medium_speed'"))
+-- assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.fmradio'"))
+-- assert(ldbus.bus.add_match(agent.conn , "type='signal',interface='com.jlr.mediaManager'"))
 ----------------------------------
 
 agent.conn:flush()
