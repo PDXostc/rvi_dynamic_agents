@@ -179,6 +179,12 @@ agent:
 			}
 	}
 
+	agent.signal_subscribe(sub) = {
+		Expected Parameters:
+			sub = interface to subscribe to, to listen for signals
+		Return = Void
+	}
+
 ```
 
 Typical Event Loop code:

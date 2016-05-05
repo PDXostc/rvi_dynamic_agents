@@ -1,4 +1,6 @@
-local host_prefix = "genivi.org/node/test-node/"
+local host_prefix = "genivi.org/node/afantest/"
+
+agent.signal_subscribe("bus.can.update.can_medium_speed")
 
 time.now()
 time.sleep(1)

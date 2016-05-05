@@ -9,7 +9,7 @@ NEW_AGENT_SERVICE = "agent"
 TERMINATE_AGENT_SERVICE = "terminate_agent"
 
 #The websocket host that our RVI websocket server is listening on
-RVI_WS_HOST = "ws://localhost:8808"
+RVI_WS_HOST = "ws://localhost:9008"
 
 #For future iterations when we confirm the status of the dynamic agents
 RVI_AGENT_REPORT_SERVICE = "genivi.org/backend/dynamicagents/agent_report"
