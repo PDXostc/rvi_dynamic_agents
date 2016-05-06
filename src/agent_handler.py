@@ -64,10 +64,25 @@ def print_debug(message):
         pass
 
 
+def pwd(rel_path=None):
+    """Return working directory or transform relative path into full one."""
+
+    work_dir = os.path.dirname(os.path.realpath(__file__))
+
+    if rel_path:
+        # restrict path going level up from work_dir
+        if rel_path[0] == '/':
+            rel_path = rel_path[1:]
+
+    if rel_path:
+        work_dir = os.path.join(work_dir, rel_path)
+
+    return work_dir
+
+
 def sandbox_launch(launch_cmd):
-    pwd = os.path.dirname(os.path.realpath(__file__))
-    sandbox_path = pwd + settings.LUA_SANDBOX_PATH
-    sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
+    sandbox_path = pwd(settings.LUA_SANDBOX_PATH)
+    sandbox_file = os.path.join(sandbox_path, settings.LUA_SANDBOX_SETTINGS)
 
     command = '(cd {0}; LUA_INIT=@{1} {2})'.format(
         sandbox_path, sandbox_file, launch_cmd)
@@ -111,8 +126,7 @@ def terminate_agent(agent_id):
     lock.acquire()
 
     try:
-        pwd = os.path.dirname(os.path.realpath(__file__))
-        save_path = pwd + settings.AGENT_SAVE_DIRECTORY
+        save_path = pwd(settings.AGENT_SAVE_DIRECTORY)
 
         # Grab the agent's corresponding launch_command and expiration_date
         launch_command, expiration_date = lookup_id(agent_id)
@@ -143,8 +157,7 @@ def terminate_agent(agent_id):
             print_debug('Agent does not exist in agent_pool')
             print_debug(agent_pool)
         try:
-            agent_map_filename = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), 'agent_map.txt')
+            agent_map_filename = pwd('agent_map.txt')
 
             with open(agent_map_filename, 'w+') as agent_map:
                 json.dump(agent_pool, agent_map)
@@ -240,8 +253,7 @@ def register_agent(agent_id, launch_command, expiration_date):
                 'expires': expiration_date,
             })
 
-            agent_map_filename = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), 'agent_map.txt')
+            agent_map_filename = pwd('agent_map.txt')
 
             with open(agent_map_filename, 'w+') as agent_map:
                 json.dump(agent_pool, agent_map)
@@ -299,36 +311,33 @@ def new_agent(agent, expires, agent_code, launch=None):
 
     print_debug('In new_agent')
 
-    agent = "".join(agent.split())
-    ret1, ret2 = lookup_id(agent)
+    agent_name = "".join(agent.split())
+    ret1, ret2 = lookup_id(agent_name)
 
     if ret1 is None and ret2 is None:
 
-        pwd = os.path.dirname(os.path.realpath(__file__))
-        sandbox_path = pwd + settings.LUA_SANDBOX_PATH
-        sandbox_file = sandbox_path + settings.LUA_SANDBOX_SETTINGS
-        save_path = pwd + settings.AGENT_SAVE_DIRECTORY
-        file_save_path = pwd + settings.AGENT_SAVE_DIRECTORY + agent + '.lua'
+        sandbox_path = pwd(settings.LUA_SANDBOX_PATH)
+        sandbox_file = os.path.join(sandbox_path, settings.LUA_SANDBOX_SETTINGS)
+        save_path = pwd(settings.AGENT_SAVE_DIRECTORY)
+        file_save_path = os.path.join(save_path, agent_name + '.lua')
 
         try:
             print_debug("In try handler")
-            agent_name = agent
             launch_cmd = settings.LUA_PATH + ' ' + file_save_path
             expiration = float(expires)
-
-            tempsavepath = os.path.join(save_path, (agent_name + '.lua'))
 
             print_debug("got all correct params")
 
             # ############Save The Agent##############
             lock.acquire()
             try:
-                with open(tempsavepath, "w+") as savefile:
+                with open(file_save_path, "w+") as savefile:
                     raw_code = base64.b64decode(
                         agent_code.encode('UTF-8')).decode('UTF-8')
                     savefile.write(raw_code)
-            except:
-                print_debug("Saving to file failed, continuing execution")
+            except Exception as e:
+                print_debug(
+                    "Saving to file failed, continuing execution: %s" % e)
             lock.release()
 
             print_debug('forwarding message payload to agent_register')
@@ -374,8 +383,8 @@ def kill_agent(agent):
 if __name__ == "__main__":
     # Attempt to load in our previous agent mapping if not create the agent map
     # file which will store our mapping
-    agent_map_filename = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), 'agent_map.txt')
+    agent_map_filename = pwd('agent_map.txt')
+
     try:
         with open(agent_map_filename, 'r+') as agent_map:
             agent_pool = json.load(agent_map)
