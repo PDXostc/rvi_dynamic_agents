@@ -130,12 +130,19 @@ class Agent(object):
 
     def force_terminate(self):
         """Force termination of agent's process."""
+
+        def is_my_process(cmdline):
+            if cmdline and ' '.join(cmdline) == self.launch_command:
+                return True
+            return False
+
         all_pids = psutil.pids()
 
         for pid in all_pids:
             try:
                 cmd_line = psutil.Process(pid).cmdline()
-                if len(cmd_line) >= 2 and self.name in cmd_line[1]:
+
+                if is_my_process(cmd_line):
                     print_debug('Terminating process "%s": %s' % (
                         pid, cmd_line))
                     psutil.Process(pid).terminate()
