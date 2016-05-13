@@ -145,9 +145,9 @@ class Agent(object):
 
     def __repr__(self):
         params = ', '.join([
-            'name=%s' % self.name,
+            'name="%s"' % self.name,
             'expiration_date=%s' % self.expiration,
-            'launch_command=%s' % self.launch_command,
+            'launch_command="%s"' % self.launch_command,
         ])
         return 'Agent(%s)' % params
 
