@@ -112,12 +112,14 @@ class Agent(object):
     def start(self):
         """Start agent script in new process."""
 
-        print_debug('Launching agent "%s" with command: %s' % (
-            self.name, self.launch_command))
+        print_debug('Starting agent: %s' % self.name)
 
         # try to terminate any previous agent running
+        print_debug('Cleaning any previous running processes of this agent.')
         self.force_terminate()
 
+        print_debug('Launching agent "%s" with command: %s' % (
+            self.name, self.launch_command))
         self.process = subprocess.Popen(
             sandbox_launch(self.launch_command), shell=True)
 
