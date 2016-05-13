@@ -112,7 +112,7 @@ class Agent(object):
     def start(self):
         """Start agent script in new process."""
 
-        print_debug('Launching agent "%s" with command: ' % (
+        print_debug('Launching agent "%s" with command: %s' % (
             self.name, self.launch_command))
 
         # try to terminate any previous agent running
